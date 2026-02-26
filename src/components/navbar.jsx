@@ -41,16 +41,16 @@ const Navbar = () => {
 
         {/* Desktop Nav Icons */}
         <ul className="hidden md:flex gap-6">
-          <li className="rounded-full w-[40px] h-[40px] duration-75 transition-color hover:bg-gray-500/100 p-2.5 bg-[rgba(255,255,255,0.1)] cursor-pointer hover:bg-[#958169]">
+          <li className="rounded-full w-[40px] h-[40px] duration-75 transition-color  p-2.5 bg-[rgba(255,255,255,0.1)] cursor-pointer hover:bg-[#958169]">
             <img className="w-full h-full" src={search} alt="Search jewelry" />
           </li>
-          <li className="rounded-full w-[40px] h-[40px] duration-75 transition-color hover:bg-gray-500/100 p-2.5 bg-[rgba(255,255,255,0.1)] cursor-pointer hover:bg-[#958169]">
+          <li className="rounded-full w-[40px] h-[40px] duration-75 transition-color p-2.5 bg-[rgba(255,255,255,0.1)] cursor-pointer hover:bg-[#958169]">
             <img className="w-full h-full" src={icon3} alt="Wishlist" />
           </li>
-          <li className="rounded-full w-[40px] h-[40px] hover:bg-gray-500/100 duration-75 transition-color p-2.5 bg-[rgba(255,255,255,0.1)] cursor-pointer hover:bg-[#958169]">
+          <li className="rounded-full w-[40px] h-[40px]  duration-75 transition-color p-2.5 bg-[rgba(255,255,255,0.1)] cursor-pointer hover:bg-[#958169]">
             <img className="w-full h-full" src={icon2} alt="Account" />
           </li>
-          <li className="rounded-full w-[40px] h-[40px] duration-75 transition-color hover:bg-gray-500/100 p-2.5 bg-[rgba(255,255,255,0.1)] cursor-pointer hover:bg-[#958169]">
+          <li className="rounded-full w-[40px] h-[40px] duration-75 transition-color p-2.5 bg-[rgba(255,255,255,0.1)] cursor-pointer hover:bg-[#958169]">
             <img className="w-full h-full" src={icon1} alt="Cart" />
           </li>
         </ul>
