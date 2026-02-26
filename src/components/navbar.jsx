@@ -39,6 +39,15 @@ const Navbar = () => {
           <img className="text-xl font-bold w-[55px] cursor-pointer h-[50px] lg:w-[85px] lg:h-[80px]" src={logo} alt="Gems Ore - Premium Jewelry Store Nigeria" />
         </Link>
 
+        <ul className="flex md:ml-[8.5rem] items-center justify-center gap-6 rounded-lg duration-75 transition-color py-1 px-2 md:py-1.5 md:px-4 bg-[rgba(255,255,255,0.1)]">
+               <li className=" cursor-pointer hover:text-[#958169] duration-300">
+          <span className="font-thin text-[10px] md:text-sm">Men</span>
+          </li>
+          <li className=" cursor-pointer hover:text-[#958169] duration-300">
+          <span className="font-thin text-[10px] md:text-sm">Women</span>
+          </li>
+        </ul>
+
         {/* Desktop Nav Icons */}
         <ul className="hidden md:flex gap-6">
           <li className="rounded-full w-[40px] h-[40px] duration-75 transition-color  p-2.5 bg-[rgba(255,255,255,0.1)] cursor-pointer hover:bg-[#958169]">
