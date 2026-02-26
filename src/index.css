@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@font-face {
+  font-family: 'Meutas Bold';
+  src: url('/fonts/Meutas-Font/Meutas/meutas-bold-webfont.woff2') format('woff2');
+  font-weight: 900 !important;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Meutas Regular';
+  src: url('/fonts/Meutas-Font/Meutas/meutas-regular-webfont.woff2') format('woff2');
+  font-weight: 400 !important;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Meutas Thin';
+  src: url('/fonts/Meutas-Font/Meutas/meutas-thin-webfont.woff2') format('woff2');
+  font-weight: 400 !important;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Meutas Light';
+  src: url('/fonts/Meutas-Font/Meutas/meutas-light-webfont.woff2') format('woff2');
+  font-weight: 400 !important;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Meutas Black';
+  src: url('/fonts/Meutas-Font/Meutas/meutas-black-webfont.woff2') format('woff2');
+  font-weight: 400 !important;
+  font-style: normal;
+  font-display: swap;
+}
+
+h1 {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+p {
+  font-family: 'Helvetica', 'Arial', sans-serif;
+  font-weight: 300;
+  font-style: light;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  display: flex;
+  gap: 40px;
+  width: fit-content;
+  animation: scroll 100s linear infinite;
+}
+
+.marquee-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+
+.react-datepicker__input-container input:focus {
+  @apply outline-none 
+    border-none 
+    shadow-none;
+}
+
+.slick-track {
+  display: flex !important;
+  align-items: center !important;
+}
+
+
+
+input[type="radio"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #c8c8c8;
+  border-radius: 50%;
+  outline: none;
+  background-color: white;
+  cursor: pointer;
+}
+input[type="radio"]:checked {
+  background-color: #fd9602;
+}
+
+
+/* Hide the native checkbox */
+.custom-checkbox input[type="checkbox"] {
+  display: none;
+}
+
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Style the checkbox container */
+.custom-checkbox .checkmark {
+  display: inline-block;
+  width: 24px; 
+  height: 24px; 
+  border: 2px solid #ccc;
+  border-radius: 4px; 
+  background-color: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* Change background and border color on hover */
+.custom-checkbox .checkmark:hover {
+  border-color: #999;
+}
+
+/* Checked state styles */
+.custom-checkbox input[type="checkbox"]:checked + .checkmark {
+  background-color: #fd9602;
+  border-color: #fd9602;
+}
+
+.custom-checkbox input[type="checkbox"]:checked + .checkmark::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.slick-dots li.slick-active button:before {
+  opacity: .75;
+  color: #fd9602 !important;
+}
+
+
+.slider-container {
+  background-color: #fff;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+}
+
+.slick-dots li button:before {
+  font-family: 'slick';
+  font-size: 9px;
+  line-height: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  content: '•';
+  text-align: center;
+  opacity: .25;
+  color: black;
+}
+
+.slick-track {
+  width: 9192px !important;
+}
+
+.slick-prev:before {
+  content: "←";
+  color: #c8c8c8 !important;
+}
+
+.slick-prev:hover:before {
+  color: #fd9602 !important;
+}
+
+.slick-next:before {
+  content: "←";
+  color: #c8c8c8 !important;
+}
+
+.slick-next:hover:before {
+  color: #fd9602 !important;
+}

@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /login/
+Disallow: /cart/
+Disallow: /checkout/
+
+Allow: /
+
+Sitemap: https://smashtravels.com/sitemap.xml
