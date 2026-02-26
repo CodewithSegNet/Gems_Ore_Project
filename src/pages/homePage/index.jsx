@@ -3,6 +3,8 @@ import { Helmet, HelmetProvider } from "react-helmet-async";
 import Navbar from "../../components/navbar";
 import Home from "../../components/home";
 import Footer from "../../components/footer";
+import First from "../../components/firstsection";
+
 
 const HomePage = () => {
   return (
@@ -30,6 +32,7 @@ const HomePage = () => {
 
       <Navbar />
       <Home />
+      <First />
       <Footer />
 
     </HelmetProvider>

@@ -8,6 +8,8 @@ import tiktokIcon from "../assets/tiktok.png";
 import paystack from "../assets/pay.png";
 import bitcoin from "../assets/bitcoin.png";
 import usdt from "../assets/usdt.png";
+import twitterIcon from "../assets/twitter.png";
+import snapchat from "../assets/snapchat.png";
 
 const shopItems = ["Rings", "Earrings", "Watches", "Bracelets", "Necklaces", "Anklets"];
 const policyItems = ["Refund Policy", "Shipping Policy", "Terms of Service"];
@@ -20,9 +22,12 @@ const contactItems = [
 ];
 
 const followItems = [
-  { icon: instagramIcon, label: "gems_ore", href: "https://www.instagram.com/gems_ore" },
-  { icon: facebookIcon, label: "gems_ore", href: "https://www.facebook.com/gems_ore" },
-  { icon: tiktokIcon, label: "gems_ore", href: "https://www.tiktok.com/@gems_ore" },
+  { icon: instagramIcon, label: "GEMS ORE", href: "https://www.instagram.com/gems_ore" },
+  { icon: facebookIcon, label: "GEMS ORE", href: "https://www.facebook.com/gems_ore" },
+  { icon: tiktokIcon, label: "gems.ore", href: "https://www.tiktok.com/@gems_ore" },
+    { icon: snapchat, label: "gems.ore", href: "https://www.snapchat.com/@gems_ore" },
+  { icon: twitterIcon, label: "gemsorelimited", href: "https://www.twitter.com/gems_ore" },
+
 ];
 
 const Footer = () => {
@@ -114,6 +119,9 @@ const Footer = () => {
               </li>
             ))}
           </ul>
+          <p style={{ fontFamily: "'Helvetica', 'Arial', sans-serif", fontWeight: 300, fontStyle: 'normal', fontSize: '14px', lineHeight: '100%', letterSpacing: '0%' }} className="text-white/60 mt-3">
+            No.2 Sakono Street, Roualty Square Mall, Wuse II
+          </p>
         </div>
 
         {/* Follow Us */}

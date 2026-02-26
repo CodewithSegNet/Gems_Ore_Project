@@ -9,6 +9,7 @@ body{
 
 html, body{
   min-width: 230px;
+  background-color: #f2ebe3;
   overflow-x: hidden;
 }
 
