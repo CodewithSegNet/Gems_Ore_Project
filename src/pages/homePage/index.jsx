@@ -4,6 +4,7 @@ import Navbar from "../../components/navbar";
 import Home from "../../components/home";
 import Footer from "../../components/footer";
 import First from "../../components/firstsection";
+import Second from "../../components/secondsection";
 
 
 const HomePage = () => {
@@ -30,11 +31,13 @@ const HomePage = () => {
         <meta name="twitter:description" content="Shop extraordinary jewelry crafted for life's most precious moments. Gold, diamond & handcrafted pieces." />
       </Helmet>
 
-      <Navbar />
-      <Home />
-      <First />
-      <Footer />
-
+      <div className="bg-[#f2ebe3]">
+        <Navbar />
+        <Home />
+        <First />
+        <Second />
+        <Footer />
+      </div>
     </HelmetProvider>
   );
 };

@@ -11,13 +11,13 @@ import usdt from "../assets/usdt.png";
 import twitterIcon from "../assets/twitter.png";
 import snapchat from "../assets/snapchat.png";
 
-const shopItems = ["Rings", "Earrings", "Watches", "Bracelets", "Necklaces", "Anklets"];
+const shopItems = ["Watches", "Rings", "Earrings", "Bracelets", "Necklaces", "Anklets"];
 const policyItems = ["Refund Policy", "Shipping Policy", "Terms of Service"];
 const locationItems = ["Abuja (FCT)"];
 
 const contactItems = [
   { icon: callIcon, label: "+234 80383828292", href: "tel:+23480383828292" },
-  { icon: whatsappIcon, label: "+234 80383828292", href: "https://wa.me/23480383828292" },
+//   { icon: whatsappIcon, label: "+234 80383828292", href: "https://wa.me/23480383828292" },
   { icon: emailIcon, label: "gemsorelimited@gmail.com", href: "mailto:gemsorelimited@gmail.com" },
 ];
 
@@ -97,7 +97,7 @@ const Footer = () => {
                   href={item.href}
                   target={item.href.startsWith("http") ? "_blank" : "_self"}
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-white/60 text-sm hover:text-[#958169] cursor-pointer transition-colors duration-300"
+                  className="flex items-center gap-2 underline text-white/60 text-sm hover:text-[#958169] cursor-pointer transition-colors duration-300"
                 >
                   <img src={item.icon} alt="" className="w-[16px] h-[16px] shrink-0" />
                   <span className="break-all">{item.label}</span>
@@ -119,7 +119,7 @@ const Footer = () => {
               </li>
             ))}
           </ul>
-          <p style={{ fontFamily: "'Helvetica', 'Arial', sans-serif", fontWeight: 300, fontStyle: 'normal', fontSize: '14px', lineHeight: '100%', letterSpacing: '0%' }} className="text-white/60 mt-3">
+          <p style={{ fontFamily: "'Helvetica', 'Arial', sans-serif", fontWeight: 300, fontStyle: 'normal', fontSize: '12px', lineHeight: '100%', letterSpacing: '0%' }} className="text-[#797979] mt-1 ">
             No.2 Sakono Street, Roualty Square Mall, Wuse II
           </p>
         </div>
