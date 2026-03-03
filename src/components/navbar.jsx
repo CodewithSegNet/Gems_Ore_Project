@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../contexts/cartContext";
+import { useGender } from "../contexts/genderContext";
 import logo from "../assets/logos.png";
 import search from "../assets/search.png";
 import icon2 from "../assets/icon2.png";
@@ -12,7 +13,7 @@ import darkcart from "../assets/iconcart.png";
 import darklove from "../assets/iconlove.png";
 import darkaccount from "../assets/iconprofile.png";
 import fast from "../assets/fast.png";
-import bar from "../assets/Rectangle.png";
+import bar from "../assets/Rectangle2.svg";
 
 
 const bannerItems = ["earrings", "bracelets", "necklaces", "rings", "watches", "anklets"];
@@ -35,10 +36,12 @@ const Navbar = ({ dark = true }) => {
   const [cartOpen, setCartOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [wishlistTab, setWishlistTab] = useState("Favorites");
   const searchRef = useRef(null);
   const navigate = useNavigate();
 
   const { cartItems, cartCount, removeFromCart, updateQuantity, subtotal, discount, vat, total } = useCart();
+  const { gender, setGender } = useGender();
 
   // Mock auth state — replace with real auth later
   const [isLoggedIn] = useState(false);
@@ -108,13 +111,15 @@ const Navbar = ({ dark = true }) => {
           <img className="text-xl font-bold w-[55px] cursor-pointer h-[50px] lg:w-[85px] lg:h-[80px]" src={logo} alt="Gems Ore - Premium Jewelry Store Nigeria" />
         </Link>
 
-        <ul className={`flex md:ml-[8.5rem] items-center justify-center gap-6 rounded-lg duration-75 transition-underline py-1 px-2 md:py-1.5 md:px-4 ${iconBg}`}>
-          <li className=" cursor-pointer hover:underline duration-300">
-            <span className="font-thin text-[10px] md:text-sm">Men</span>
-          </li>
-          <li className=" cursor-pointer hover:underline duration-300">
+        <ul className={`flex md:ml-[8.5rem] items-center justify-center gap-6 rounded-md md:rounded-lg duration-75 transition-underline py-1 px-2 md:py-1.5 md:px-4 ${iconBg}`}>
+          
+                   <li onClick={() => setGender("women")} className={`cursor-pointer mb-1.5 md:mb-0 duration-300 ${gender === "women" ? "underline underline-offset-4" : "hover:underline"}`}>
             <span className="font-thin text-[10px] md:text-sm">Women</span>
           </li>
+          <li onClick={() => setGender("men")} className={`cursor-pointer mb-1.5 md:mb-0 duration-300 ${gender === "men" ? "underline underline-offset-4" : "hover:underline"}`}>
+            <span className="font-thin text-[10px] md:text-sm">Men</span>
+          </li>
+ 
         </ul>
 
         {/* Desktop Nav Icons */}
@@ -214,7 +219,7 @@ const Navbar = ({ dark = true }) => {
           {/* Header */}
           <div className="sticky top-0 bg-white z-10 px-6 py-5 border-b border-gray-100">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-[rgba(68,68,68,1)]">My Account</h2>
+              <h2 className="text-xl font-normal text-[rgba(68,68,68,1)]">Favorites</h2>
               <button onClick={() => setWishlistOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors cursor-pointer">
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
                   <path d="M1 1L13 13M1 13L13 1" stroke="rgba(68,68,68,1)" strokeWidth="2" strokeLinecap="round" />
@@ -223,29 +228,64 @@ const Navbar = ({ dark = true }) => {
             </div>
           </div>
 
-          {/* Menu Items */}
-          <div className="px-6 py-6">
-            <ul className="flex flex-col gap-1">
-              {[
-                { label: "Favorites", icon: "♥", link: "#" },
-                { label: "Orders", icon: "📦", link: "#" },
-                { label: "Profile", icon: "👤", link: "#" },
-              ].map((item) => (
-                <li key={item.label}>
-                  <Link
-                    to={item.link}
-                    onClick={() => setWishlistOpen(false)}
-                    className="flex items-center gap-4 px-4 py-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 group"
-                  >
-                    <span className="text-lg">{item.icon}</span>
-                    <span className="text-base text-[rgba(68,68,68,1)] group-hover:text-[rgba(88,57,49,1)] transition-colors font-medium">{item.label}</span>
-                    <svg className="ml-auto w-4 h-4 text-gray-300 group-hover:text-[rgba(88,57,49,1)] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </li>
+          {/* Tabs + Content */}
+          <div className="px-6 py-4">
+            <div className="flex gap-0 border-b border-gray-200">
+              {["Favorites", "Orders", "Profile"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setWishlistTab(tab)}
+                  className={`flex-1 py-3 text-sm font-medium text-center transition-all duration-200 cursor-pointer ${
+                    wishlistTab === tab
+                      ? "text-[rgba(88,57,49,1)] border-b-2 border-[rgba(88,57,49,1)]"
+                      : "text-gray-400 hover:text-[rgba(68,68,68,1)]"
+                  }`}
+                >
+                  {tab}
+                </button>
               ))}
-            </ul>
+            </div>
+
+            {/* Tab Content */}
+            <div className="py-6">
+              {wishlistTab === "Favorites" && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="rgba(200,200,200,1)" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                  </svg>
+                  <p className="mt-3 text-sm font-medium text-[rgba(68,68,68,1)]">No favorites yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Items you love will appear here</p>
+                  <Link to="/products" onClick={() => setWishlistOpen(false)} className="mt-4 text-sm text-[rgba(88,57,49,1)] underline hover:text-[rgba(68,47,39,1)] transition-colors">
+                    Browse Products
+                  </Link>
+                </div>
+              )}
+
+              {wishlistTab === "Orders" && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="rgba(200,200,200,1)" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  <p className="mt-3 text-sm font-medium text-[rgba(68,68,68,1)]">No orders yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Your orders will appear here</p>
+                  <Link to="/products" onClick={() => setWishlistOpen(false)} className="mt-4 text-sm text-[rgba(88,57,49,1)] underline hover:text-[rgba(68,47,39,1)] transition-colors">
+                    Find an Item to Order
+                  </Link>
+                </div>
+              )}
+
+              {wishlistTab === "Profile" && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="rgba(200,200,200,1)" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                  </svg>
+                  <p className="mt-3 text-sm font-medium text-[rgba(68,68,68,1)]">Sign in to view profile</p>
+                  <Link to="/login" onClick={() => setWishlistOpen(false)} className="mt-4 text-sm text-[rgba(88,57,49,1)] underline hover:text-[rgba(68,47,39,1)] transition-colors">
+                    Sign In
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </aside>
       </div>
@@ -357,7 +397,7 @@ const Navbar = ({ dark = true }) => {
       <div className={`fixed inset-0 z-50 transition-all duration-300 ${cartOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setCartOpen(false)}></div>
         <aside
-          className={`absolute right-0 top-0 h-full bg-white shadow-2xl overflow-y-auto transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${cartOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          className={`absolute right-0 top-0 h-full bg-white shadow-2xl overflow-y-auto transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] flex flex-col ${cartOpen ? 'translate-x-0' : 'translate-x-full'}`}
           style={{ width: "min(541px, 90vw)" }}
         >
           {/* Header */}
@@ -379,29 +419,27 @@ const Navbar = ({ dark = true }) => {
   <img className="w-5 h-5" src={fast} alt="" />
 </div>
 
-<div className="pt-3">
-    <img src={bar} alt="" />
-
+<div className="w-full pt-3 rounded-full">
+    <img className="w-[100%] h-4 rounded-full" src={bar} alt="" />
 </div>
             </div>
           </div>
 
           {/* Cart Body */}
-          <div className="px-6 py-4">
+          <div className="px-6 py-4 flex-1 flex flex-col">
             {cartItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="flex flex-col items-center justify-center flex-1 text-center">
                 <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="rgba(200,200,200,1)" strokeWidth="1">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
                 </svg>
-                <p className="mt-4 text-lg font-medium text-[rgba(68,68,68,1)]">Your Cart is Empty</p>
-                <p className="text-sm text-gray-400 mt-1">Add Item to Cart</p>
+                <p className="mt-2 text-lg font-medium text-[rgba(68,68,68,1)]">Your Cart is Empty</p>
+                <p className="text-sm text-gray-400 mt-1"></p>
 
-                <div className="mt-8 bg-white rounded-lg p-4 border border-gray-100 w-full max-w-[232px]">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 font-medium">Recommended</p>
-                  <ul className="flex flex-col gap-4">
-                    {["Necklaces", "Rings", "Bracelets", "Earrings"].map((cat) => (
+                <div className="mt-2 bg-white rounded-lg w-fit max-w-[232px]">
+                  <ul className="flex justify-center items-center py-3 px-6 border text-black border-black hover:bg-primary hover:border-primary hover:text-white transition-colors rounded-md">
+                    {["Add Item to Cart"].map((cat) => (
                       <li key={cat}>
-                        <Link to={`/products?category=${cat.toLowerCase()}`} onClick={() => setCartOpen(false)} className="text-sm text-[rgba(68,68,68,1)] underline hover:text-[rgba(88,57,49,1)] transition-colors">
+                        <Link to={`/products?category=${cat.toLowerCase()}`} onClick={() => setCartOpen(false)} className="text-sm hover:text-white transition-colors">
                           {cat}
                         </Link>
                       </li>

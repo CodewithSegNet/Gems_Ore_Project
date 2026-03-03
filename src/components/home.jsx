@@ -1,23 +1,32 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import backgroundVideo from "../assets/video.mp4";
+import { useGender } from "../contexts/genderContext";
 import watch from "../assets/watch.png";
 import ring from "../assets/ring.png";
 import necklace from "../assets/necklace.png";
 import earringsImg from "../assets/earrings.png";
 import bracelet from "../assets/bracelet.png";
+import male from "../assets/male_video.mp4"
 
 const Home = () => {
   const [btnHovered, setBtnHovered] = useState(false);
+  const { gender } = useGender();
 
   return (
     <>
       {/* Hero Section */}
       <section className="relative w-full h-[90vh] overflow-hidden">
         {/* Background Video */}
-        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
-          <source src={backgroundVideo} type="video/mp4" />
-        </video>
+        {gender === "women" ? (
+          <video key="women-video" autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+            <source src={backgroundVideo} type="video/mp4" />
+          </video>
+        ) : (
+          <video key="men-video" autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+            <source src={male} type="video/mp4" />
+          </video>
+        )}
 
         {/* Overlay */}
         <div className="absolute inset-0 bg-[rgba(30,30,30,0.7)]"></div>
@@ -25,10 +34,12 @@ const Home = () => {
         {/* Centered Content */}
         <div className="relative z-20 flex flex-col items-center justify-center h-full text-center text-white px-4">
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            Timeless Elegance
+            {gender === "women" ? "Timeless Elegance" : "Bold Elegance"}
           </h1>
           <p className="text-lg md:text-[22px]">
-            Shop extraordinary jewelry crafted for life's most precious moments
+            {gender === "women"
+              ? "Shop extraordinary jewelry crafted for life's most precious moments"
+              : "Premium men's jewelry for the modern gentleman"}
           </p>
 
           {/* Animated CTA Button */}

@@ -10,6 +10,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 
 import App from './App.jsx'
+import { GenderProvider } from './contexts/genderContext.jsx'
 
 const queryClient = new QueryClient();
 
@@ -20,7 +21,9 @@ createRoot(document.getElementById('root')).render(
          <BrowserRouter
             future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
           >
+    <GenderProvider>
     <App />
+    </GenderProvider>
     </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>

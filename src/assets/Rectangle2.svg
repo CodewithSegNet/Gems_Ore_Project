@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="20" viewBox="0 0 1200 20">
+  <defs>
+    <pattern id="movingStripes" x="0" y="0" width="40" height="20" patternUnits="userSpaceOnUse">
+      <animateTransform attributeName="patternTransform"
+        type="translate"
+        from="0 0"
+        to="40 0"
+        dur="1.2s"
+        repeatCount="indefinite"/>
+      <!-- Dark stripe -->
+      <polygon points="0,0 20,0 40,20 20,20" fill="#1a1200"/>
+      <!-- Yellow stripe left -->
+      <polygon points="-20,0 0,0 20,20 0,20" fill="#f5c800"/>
+      <!-- Yellow stripe right -->
+      <polygon points="20,0 40,0 60,20 40,20" fill="#f5c800"/>
+    </pattern>
+
+    <!-- Clip to rounded rectangle -->
+    <clipPath id="rounded">
+      <rect width="1200" height="20" rx="10" ry="10"/>
+    </clipPath>
+
+    <!-- Shimmer -->
+    <linearGradient id="shimmer" x1="0%" y1="0%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="transparent"/>
+      <stop offset="45%" stop-color="transparent"/>
+      <stop offset="50%" stop-color="rgba(255,255,180,0.3)"/>
+      <stop offset="55%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="transparent"/>
+      <animateTransform attributeName="gradientTransform"
+        type="translate"
+        from="-1200 0"
+        to="2400 0"
+        dur="2.4s"
+        repeatCount="indefinite"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Moving stripes clipped to rounded rect -->
+  <rect width="1200" height="20" fill="url(#movingStripes)" clip-path="url(#rounded)"/>
+
+  <!-- Shimmer overlay -->
+  <rect width="1200" height="20" fill="url(#shimmer)" clip-path="url(#rounded)"/>
+</svg>

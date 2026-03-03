@@ -5,6 +5,9 @@ import Home from "../../components/home";
 import Footer from "../../components/footer";
 import First from "../../components/firstsection";
 import Second from "../../components/secondsection";
+import NewestCollections from "../../components/newestcollections";
+import BestSellers from "../../components/bestsellers";
+import LastSection from "../../components/last";
 
 
 const HomePage = () => {
@@ -36,6 +39,9 @@ const HomePage = () => {
         <Home />
         <First />
         <Second />
+        <NewestCollections />
+        <BestSellers />
+        <LastSection />
         <Footer />
       </div>
     </HelmetProvider>

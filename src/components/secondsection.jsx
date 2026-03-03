@@ -1,12 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useGender } from "../contexts/genderContext";
 import watches from "../assets/watches.avif";
 import rings from "../assets/rings.avif";
 import earringsImg from "../assets/earrings.avif";
 import necklace from "../assets/neckless.avif";
 import bracelet from "../assets/bracklet.avif";
+import maleCol1 from "../assets/male_collection_1.png";
+import maleCol2 from "../assets/male_collection_2.png";
+import maleCol3 from "../assets/male_collection_3.png";
+import maleCol4 from "../assets/male_collection_4.png";
+import maleCol5 from "../assets/male_collection_5.png";
+import maleCol6 from "../assets/male_collection_6.png";
 
-const pages = [
+const womenPages = [
   [
     { name: "Watches", image: watches, category: "watches" },
     { name: "Necklaces", image: necklace, category: "necklaces" },
@@ -19,13 +26,32 @@ const pages = [
   ],
 ];
 
+const menPages = [
+  [
+    { name: "Chains", image: maleCol1, category: "necklaces" },
+    { name: "Watches", image: maleCol2, category: "watches" },
+    { name: "Earrings", image: maleCol3, category: "earrings" },
+  ],
+  [
+    { name: "Pendants", image: maleCol4, category: "necklaces" },
+    { name: "Rings", image: maleCol5, category: "rings" },
+    { name: "Anklets", image: maleCol6, category: "bracelets" },
+  ],
+];
+
 const SecondSection = () => {
+  const { gender } = useGender();
+  const pages = gender === "men" ? menPages : womenPages;
   const [activePage, setActivePage] = useState(0);
   const [animKey, setAnimKey] = useState(0);
   const [mobileSlide, setMobileSlide] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchStartTime = useRef(0);
+  const isHorizontalSwipe = useRef(null);
   const sliderRef = useRef(null);
   const [showGesture, setShowGesture] = useState(false);
   const sectionRef = useRef(null);
@@ -63,12 +89,13 @@ const SecondSection = () => {
 
   // Auto-slide on mobile every 4 seconds
   useEffect(() => {
-    if (!isMobile) return;
+    if (!isMobile || isDragging) return;
+    const total = pages[0].length + pages[1].length;
     const interval = setInterval(() => {
-      setMobileSlide((prev) => (prev + 1) % pages[activePage].length);
+      setMobileSlide((prev) => (prev + 1) % total);
     }, 4000);
     return () => clearInterval(interval);
-  }, [isMobile, activePage, mobileSlide]);
+  }, [isMobile, mobileSlide, isDragging]);
 
   // Reset mobile slide when page switches and re-trigger gesture
   useEffect(() => {
@@ -76,33 +103,74 @@ const SecondSection = () => {
     if (isMobile) setShowGesture(true);
   }, [activePage]);
 
+  // Reset slide when gender changes
+  useEffect(() => {
+    setMobileSlide(0);
+    setActivePage(0);
+    setAnimKey((prev) => prev + 1);
+  }, [gender]);
+
   const handlePageSwitch = (page) => {
     if (page === activePage) return;
     setActivePage(page);
     setAnimKey((prev) => prev + 1);
   };
 
+  const items = pages[activePage];
+  const allMobileItems = [...pages[0], ...pages[1]];
+
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    touchStartTime.current = Date.now();
+    isHorizontalSwipe.current = null;
+    setDragOffset(0);
+    setIsDragging(false);
   };
 
   const handleTouchMove = (e) => {
-    touchEndX.current = e.touches[0].clientX;
+    const diffX = e.touches[0].clientX - touchStartX.current;
+    const diffY = e.touches[0].clientY - touchStartY.current;
+
+    // Determine direction on first significant movement
+    if (isHorizontalSwipe.current === null && (Math.abs(diffX) > 8 || Math.abs(diffY) > 8)) {
+      isHorizontalSwipe.current = Math.abs(diffX) > Math.abs(diffY);
+    }
+
+    // Vertical swipe — let the page scroll
+    if (isHorizontalSwipe.current === false || isHorizontalSwipe.current === null) return;
+
+    // Horizontal swipe — capture it
+    setIsDragging(true);
+    setDragOffset(diffX);
   };
 
   const handleTouchEnd = () => {
-    const diff = touchStartX.current - touchEndX.current;
-    const items = pages[activePage];
-    if (diff > 50 && mobileSlide < items.length - 1) {
-      setMobileSlide((prev) => prev + 1);
-      setShowGesture(false);
-    } else if (diff < -50 && mobileSlide > 0) {
-      setMobileSlide((prev) => prev - 1);
-      setShowGesture(false);
+    if (!isDragging) {
+      setDragOffset(0);
+      return;
     }
-  };
+    setIsDragging(false);
+    isHorizontalSwipe.current = null;
 
-  const items = pages[activePage];
+    const containerWidth = sliderRef.current?.offsetWidth || 1;
+    const elapsed = Date.now() - touchStartTime.current;
+    const velocity = Math.abs(dragOffset) / elapsed;
+    const totalItems = allMobileItems.length;
+    const threshold = containerWidth * 0.25;
+    const shouldChange = Math.abs(dragOffset) > threshold || velocity > 0.3;
+
+    if (shouldChange) {
+      if (dragOffset < 0 && mobileSlide < totalItems - 1) {
+        setMobileSlide((prev) => prev + 1);
+        setShowGesture(false);
+      } else if (dragOffset > 0 && mobileSlide > 0) {
+        setMobileSlide((prev) => prev - 1);
+        setShowGesture(false);
+      }
+    }
+    setDragOffset(0);
+  };
 
   const CollectionCard = ({ item, i, noAnim = false }) => (
     <div
@@ -139,52 +207,48 @@ const SecondSection = () => {
         <div className="flex items-center w-full justify-between mb-[34px]">
           <div className="text-start">
             <h1 className="text-[rgba(68,68,68,1)] lg:text-4xl text-2xl font-normal">Our Collections</h1>
-            <p className="text-gray-400 lg:text-xl text-sm font-light">Curated for discerning tastes</p>
+            <p className="text-gray-600 lg:text-xl text-sm font-light">Curated for discerning tastes</p>
           </div>
 
-          {/* Pagination */}
-          <div className="flex items-center gap-4">
-            {[0, 1].map((page) => {
-              const isActive = activePage === page;
-              // Circle: r=22 → circumference = 2*π*22 ≈ 138.23
-              // 8 dashes: dash = circumference/8 * 0.6, gap = circumference/8 * 0.4
-              const circumference = 2 * Math.PI * 22;
-              const segment = circumference / 8;
-              const dash = segment * 0.6;
-              const gap = segment * 0.4;
+          {/* Pagination — desktop only */}
+          {!isMobile && (
+            <div className="flex items-center gap-4">
+              {[0, 1].map((page) => {
+                const isActive = activePage === page;
+                const circumference = 2 * Math.PI * 22;
+                const segment = circumference / 8;
+                const dash = segment * 0.6;
+                const gap = segment * 0.4;
 
-              return (
-                <button
-                  key={page}
-                  onClick={() => handlePageSwitch(page)}
-                  className="relative w-[52px] h-[52px] flex items-center justify-center cursor-pointer transition-all duration-300"
-                >
-                  {/* SVG dashed ring — outside the bg */}
-                  {isActive && (
-                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 52 52">
-                      <circle
-                        cx="26" cy="26" r="22"
-                        fill="none"
-                        stroke="rgba(88,57,49,1)"
-                        strokeWidth="2.5"
-                        strokeDasharray={`${dash} ${gap}`}
-                        strokeLinecap="round"
-                        transform="rotate(-90 26 26)"
-                      />
-                    </svg>
-                  )}
-                  {/* Inner circle */}
-                  <span className={`w-[40px] h-[40px] rounded-full flex items-center justify-center transition-all duration-300 text-sm font-bold ${
-                    isActive
-                      ? "bg-white text-black"
-                      : "bg-white text-[rgba(88,57,49,1)]"
-                  }`}>
-                    {page + 1}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageSwitch(page)}
+                    className="relative w-[52px] h-[52px] flex items-center justify-center cursor-pointer transition-all duration-300"
+                  >
+                    {isActive && (
+                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 52 52">
+                        <circle
+                          cx="26" cy="26" r="22"
+                          fill="none"
+                          stroke="rgba(88,57,49,1)"
+                          strokeWidth="2.5"
+                          strokeDasharray={`${dash} ${gap}`}
+                          strokeLinecap="round"
+                          transform="rotate(-90 26 26)"
+                        />
+                      </svg>
+                    )}
+                    <span className={`w-[40px] h-[40px] rounded-full flex items-center justify-center transition-all duration-300 text-sm font-bold ${
+                      isActive ? "bg-white text-black" : "bg-white text-[rgba(88,57,49,1)]"
+                    }`}>
+                      {page + 1}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Desktop: Grid | Mobile: Slider */}
@@ -196,7 +260,7 @@ const SecondSection = () => {
             ))}
           </div>
         ) : (
-          /* Mobile Touch Slider */
+          /* Mobile Touch Slider — all items combined */
           <div className="relative">
             <div
               ref={sliderRef}
@@ -206,18 +270,23 @@ const SecondSection = () => {
               onTouchEnd={handleTouchEnd}
             >
               <div
-                className="flex transition-transform duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)]"
-                style={{ transform: `translateX(-${mobileSlide * 100}%)` }}
+                className="flex"
+                style={{
+                  transform: `translateX(calc(-${mobileSlide * 100}% + ${isDragging ? dragOffset : 0}px))`,
+                  transition: isDragging ? "none" : "transform 400ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+                }}
               >
-                {items.map((item, i) => (
-                  <CollectionCard key={`${animKey}-${i}`} item={item} i={i} noAnim={true} />
+                {allMobileItems.map((item, i) => (
+                  <div key={i} className="w-full shrink-0 px-1">
+                    <CollectionCard item={item} i={i} noAnim={true} />
+                  </div>
                 ))}
               </div>
             </div>
 
             {/* Slide Indicators (dots) */}
             <div className="flex items-center justify-center gap-2 mt-4">
-              {items.map((_, i) => (
+              {allMobileItems.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => { setMobileSlide(i); setShowGesture(false); }}
@@ -230,10 +299,9 @@ const SecondSection = () => {
               ))}
             </div>
 
-            {/* Swipe Gesture Hint — animated hand */}
+            {/* Swipe Gesture Hint */}
             {showGesture && (
               <div className="absolute inset-0 flex items-end justify-center pb-16 pointer-events-none z-20">
-                {/* Animated swiping hand */}
                 <div className="animate-gesture-hint flex flex-col items-center gap-3">
                   <div className="animate-swipe-hand">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="white" opacity="0.9">
