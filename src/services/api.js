@@ -46,10 +46,10 @@ const storefrontApi = {
 
   // Auth
   auth: {
-    login: (email, password) =>
+    login: (email) =>
       request("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
       }),
     signup: (data) =>
       request("/auth/signup", {

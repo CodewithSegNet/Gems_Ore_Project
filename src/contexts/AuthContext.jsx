@@ -25,8 +25,8 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
-    const result = await storefrontApi.auth.login(email, password);
+  const login = async (email) => {
+    const result = await storefrontApi.auth.login(email);
     localStorage.setItem("customer_access_token", result.access_token);
     localStorage.setItem("customer_user", JSON.stringify(result.user));
     setToken(result.access_token);

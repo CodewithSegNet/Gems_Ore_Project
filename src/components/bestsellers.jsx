@@ -241,7 +241,7 @@ const BestSellers = () => {
           {hasMore && (
             <button
               onClick={handleShowMore}
-              className="px-8 py-3 border-2 border-dashed border-[rgba(88,57,49,1)] text-[rgba(88,57,49,1)] rounded-lg hover:bg-[rgba(88,57,49,1)] hover:text-white transition-colors duration-300 font-medium"
+              className="px-8 py-3 border-2 border-[rgba(88,57,49,1)] text-[rgba(88,57,49,1)] rounded-lg hover:bg-[rgba(88,57,49,1)] hover:text-white transition-colors duration-300 font-medium"
             >
               Show More
             </button>
