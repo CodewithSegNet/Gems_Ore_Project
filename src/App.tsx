@@ -15,6 +15,7 @@ import { CartProvider } from "./contexts/cartContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import ScrollToTop from "./components/ScrollToTop";
 
+
 // Admin Dashboard - Lazy loaded
 const AdminDashboardLayout = lazy(() =>
   import("./admin/components/dashboard-layout").then((m) => ({ default: m.DashboardLayout }))
