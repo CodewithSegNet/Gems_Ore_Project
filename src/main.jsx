@@ -11,6 +11,8 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import App from './App.jsx'
 import { GenderProvider } from './contexts/genderContext.jsx'
+import { AuthProvider } from './contexts/AuthContext.jsx'
+import { FavoritesProvider } from './contexts/FavoritesContext.jsx'
 
 const queryClient = new QueryClient();
 
@@ -21,9 +23,13 @@ createRoot(document.getElementById('root')).render(
          <BrowserRouter
             future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
           >
+    <AuthProvider>
+    <FavoritesProvider>
     <GenderProvider>
     <App />
     </GenderProvider>
+    </FavoritesProvider>
+    </AuthProvider>
     </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>

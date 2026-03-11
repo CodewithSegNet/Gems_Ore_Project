@@ -46,13 +46,14 @@ const SecondSection = () => {
   const [animKey, setAnimKey] = useState(0);
   const [mobileSlide, setMobileSlide] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [dragOffset, setDragOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+  const sliderRef = useRef(null);
+  const trackRef = useRef(null);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const touchStartTime = useRef(0);
-  const isHorizontalSwipe = useRef(null);
-  const sliderRef = useRef(null);
+  const currentDragOffset = useRef(0);
+  const isHorizontal = useRef(null);
+  const mobileSlideRef = useRef(0);
   const [showGesture, setShowGesture] = useState(false);
   const sectionRef = useRef(null);
 
@@ -89,23 +90,29 @@ const SecondSection = () => {
 
   // Auto-slide on mobile every 4 seconds
   useEffect(() => {
-    if (!isMobile || isDragging) return;
+    if (!isMobile) return;
     const total = pages[0].length + pages[1].length;
     const interval = setInterval(() => {
-      setMobileSlide((prev) => (prev + 1) % total);
+      setMobileSlide((prev) => {
+        const next = (prev + 1) % total;
+        mobileSlideRef.current = next;
+        return next;
+      });
     }, 4000);
     return () => clearInterval(interval);
-  }, [isMobile, mobileSlide, isDragging]);
+  }, [isMobile]);
 
   // Reset mobile slide when page switches and re-trigger gesture
   useEffect(() => {
     setMobileSlide(0);
+    mobileSlideRef.current = 0;
     if (isMobile) setShowGesture(true);
   }, [activePage]);
 
   // Reset slide when gender changes
   useEffect(() => {
     setMobileSlide(0);
+    mobileSlideRef.current = 0;
     setActivePage(0);
     setAnimKey((prev) => prev + 1);
   }, [gender]);
@@ -123,54 +130,83 @@ const SecondSection = () => {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     touchStartTime.current = Date.now();
-    isHorizontalSwipe.current = null;
-    setDragOffset(0);
-    setIsDragging(false);
+    currentDragOffset.current = 0;
+    isHorizontal.current = null;
   };
 
   const handleTouchMove = (e) => {
     const diffX = e.touches[0].clientX - touchStartX.current;
     const diffY = e.touches[0].clientY - touchStartY.current;
 
-    // Determine direction on first significant movement
-    if (isHorizontalSwipe.current === null && (Math.abs(diffX) > 8 || Math.abs(diffY) > 8)) {
-      isHorizontalSwipe.current = Math.abs(diffX) > Math.abs(diffY);
+    if (isHorizontal.current === null && (Math.abs(diffX) > 5 || Math.abs(diffY) > 5)) {
+      isHorizontal.current = Math.abs(diffX) > Math.abs(diffY);
     }
 
-    // Vertical swipe — let the page scroll
-    if (isHorizontalSwipe.current === false || isHorizontalSwipe.current === null) return;
+    if (!isHorizontal.current) return;
 
-    // Horizontal swipe — capture it
-    setIsDragging(true);
-    setDragOffset(diffX);
+    e.preventDefault();
+    currentDragOffset.current = diffX;
+
+    // Move the track directly via DOM — no React re-render needed
+    if (trackRef.current) {
+      const base = -(mobileSlideRef.current * 100);
+      trackRef.current.style.transition = "none";
+      trackRef.current.style.transform = `translateX(calc(${base}% + ${diffX}px))`;
+    }
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging) {
-      setDragOffset(0);
-      return;
-    }
-    setIsDragging(false);
-    isHorizontalSwipe.current = null;
+    if (!isHorizontal.current) return;
 
-    const containerWidth = sliderRef.current?.offsetWidth || 1;
+    const offset = currentDragOffset.current;
+    const containerWidth = sliderRef.current?.offsetWidth || 300;
     const elapsed = Date.now() - touchStartTime.current;
-    const velocity = Math.abs(dragOffset) / elapsed;
-    const totalItems = allMobileItems.length;
-    const threshold = containerWidth * 0.25;
-    const shouldChange = Math.abs(dragOffset) > threshold || velocity > 0.3;
+    const velocity = Math.abs(offset) / elapsed;
+    const total = allMobileItems.length;
+    const shouldChange = Math.abs(offset) > containerWidth * 0.2 || velocity > 0.3;
 
+    let next = mobileSlideRef.current;
     if (shouldChange) {
-      if (dragOffset < 0 && mobileSlide < totalItems - 1) {
-        setMobileSlide((prev) => prev + 1);
-        setShowGesture(false);
-      } else if (dragOffset > 0 && mobileSlide > 0) {
-        setMobileSlide((prev) => prev - 1);
-        setShowGesture(false);
-      }
+      if (offset < 0 && next < total - 1) next += 1;
+      else if (offset > 0 && next > 0) next -= 1;
     }
-    setDragOffset(0);
+
+    mobileSlideRef.current = next;
+
+    // Animate to final position via DOM
+    if (trackRef.current) {
+      trackRef.current.style.transition = "transform 380ms cubic-bezier(0.25, 0.1, 0.25, 1)";
+      trackRef.current.style.transform = `translateX(-${next * 100}%)`;
+    }
+
+    // Sync React state for dots
+    setMobileSlide(next);
+    if (next !== mobileSlideRef.current - offset) setShowGesture(false);
+    isHorizontal.current = null;
+    currentDragOffset.current = 0;
   };
+
+  // Register touch listeners with passive:false so we can call preventDefault
+  useEffect(() => {
+    const el = sliderRef.current;
+    if (!el || !isMobile) return;
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    el.addEventListener("touchend", handleTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchmove", handleTouchMove);
+      el.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [isMobile, mobileSlide]);
+
+  // Sync track position when slide changes from dots or auto-slide
+  useEffect(() => {
+    if (trackRef.current) {
+      trackRef.current.style.transition = "transform 380ms cubic-bezier(0.25, 0.1, 0.25, 1)";
+      trackRef.current.style.transform = `translateX(-${mobileSlide * 100}%)`;
+    }
+  }, [mobileSlide]);
 
   const CollectionCard = ({ item, i, noAnim = false }) => (
     <div
@@ -265,15 +301,14 @@ const SecondSection = () => {
             <div
               ref={sliderRef}
               className="overflow-hidden rounded-lg"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
             >
               <div
+                ref={trackRef}
                 className="flex"
                 style={{
-                  transform: `translateX(calc(-${mobileSlide * 100}% + ${isDragging ? dragOffset : 0}px))`,
-                  transition: isDragging ? "none" : "transform 400ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+                  transform: `translateX(-${mobileSlide * 100}%)`,
+                  transition: "transform 380ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+                  willChange: "transform",
                 }}
               >
                 {allMobileItems.map((item, i) => (

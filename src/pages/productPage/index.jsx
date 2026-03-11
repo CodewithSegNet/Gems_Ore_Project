@@ -7,15 +7,14 @@ import Footer from "../../components/footer";
 import filter from "../../assets/filter.png"; 
 import icon2 from "../../assets/icon2.png";
 import stock from "../../assets/stock.png";
+import storefrontApi from "../../services/api";
 
-import { allCatalogProducts, formatPrice } from "../../data/products";
 import { useGender } from "../../contexts/genderContext";
+import { useFavorites } from "../../contexts/FavoritesContext";
 import MobileSwiper from "../../components/MobileSwiper";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
-const allProducts = allCatalogProducts;
 
-const categories = ["all", "watches", "rings", "necklaces", "earrings", "bracelets"];
-const productTypes = ["all", "watches", "rings", "necklaces", "earrings", "bracelets"];
 
 const ITEMS_PER_PAGE = 20;
 
@@ -55,19 +54,27 @@ const ProductPage = () => {
   const navigate = useNavigate();
   const initialCategory = searchParams.get("category") || "all";
 
-  const [selectedGender, setSelectedGender] = useState("all");
+  const [allProducts, setAllProducts] = useState([]);
+  const { formatPrice, symbol } = useCurrency();
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState(initialCategory);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [outOfStockOnly, setOutOfStockOnly] = useState(false);
   const [appliedPriceRange, setAppliedPriceRange] = useState(1000000000);
   const [pendingPriceRange, setPendingPriceRange] = useState(1000000000);
+  const [appliedPriceMin, setAppliedPriceMin] = useState(0);
+  const [pendingPriceMin, setPendingPriceMin] = useState(0);
+  const PRICE_MAX = 1000000000;
   const [favorites, setFavorites] = useState(new Set());
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newlyRevealed, setNewlyRevealed] = useState(new Set());
+  const [genderFilter, setGenderFilter] = useState("all");
 
   const { addToCart } = useCart();
   const { gender } = useGender();
+  const { isFavorited, toggleFavorite } = useFavorites();
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -77,42 +84,73 @@ const ProductPage = () => {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const toggleFavorite = (productId) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(productId)) {
-        next.delete(productId);
-      } else {
-        next.add(productId);
+  // Fetch products and categories from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const params = { status: "active" };
+        if (genderFilter !== "all") {
+          params.gender = genderFilter === "men" ? "male" : "female";
+        }
+        const [productsData, categoriesData] = await Promise.all([
+          storefrontApi.products.getAll(params),
+          storefrontApi.categories.getAll(),
+        ]);
+        setAllProducts(productsData.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          image: p.image || (p.images?.[0]?.image_url) || "",
+          rating: 5.0,
+          inStock: p.stock > 0,
+          category: p.category_name?.toLowerCase() || "",
+          category_id: p.category_id,
+          gender: p.gender === "male" ? "men" : "women",
+        })));
+        setCategories(categoriesData || []);
+      } catch (e) {
+        console.error("Failed to fetch products/categories:", e);
+        setAllProducts([]);
+        setCategories([]);
+      } finally {
+        setLoading(false);
       }
-      return next;
-    });
-  };
+    };
+    fetchData();
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [genderFilter]);
+
+  const categoryNames = ["all", ...categories.map((c) => c.name.toLowerCase())];
+
+
 
   const inStockCount = allProducts.filter((p) => p.inStock).length;
   const outOfStockCount = allProducts.filter((p) => !p.inStock).length;
 
   const handleApplyPriceFilter = () => {
     setAppliedPriceRange(pendingPriceRange);
+    setAppliedPriceMin(pendingPriceMin);
     setVisibleCount(ITEMS_PER_PAGE);
   };
 
   const handleClearPriceFilter = () => {
-    setPendingPriceRange(1000000000);
-    setAppliedPriceRange(1000000000);
+    setPendingPriceRange(PRICE_MAX);
+    setAppliedPriceRange(PRICE_MAX);
+    setPendingPriceMin(0);
+    setAppliedPriceMin(0);
     setVisibleCount(ITEMS_PER_PAGE);
   };
 
   const filtered = useMemo(() => {
     return allProducts.filter((p) => {
-      if (p.gender && p.gender !== gender) return false;
       if (selectedType !== "all" && p.category !== selectedType) return false;
       if (inStockOnly && !p.inStock) return false;
       if (outOfStockOnly && p.inStock) return false;
-      if (p.price > appliedPriceRange) return false;
+      if (p.price < appliedPriceMin || p.price > appliedPriceRange) return false;
       return true;
     });
-  }, [gender, selectedType, inStockOnly, outOfStockOnly, appliedPriceRange]);
+  }, [allProducts, selectedType, inStockOnly, outOfStockOnly, appliedPriceRange, appliedPriceMin]);
 
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
@@ -120,14 +158,12 @@ const ProductPage = () => {
   const handleShowMore = () => {
     const prevCount = visibleCount;
     const nextCount = Math.min(prevCount + ITEMS_PER_PAGE, filtered.length);
-    // Mark newly revealed indices for staggered animation
     const revealed = new Set();
     for (let i = prevCount; i < nextCount; i++) {
       revealed.add(i);
     }
     setNewlyRevealed(revealed);
     setVisibleCount(nextCount);
-    // Clear animation flags after animations complete
     setTimeout(() => setNewlyRevealed(new Set()), 800);
   };
 
@@ -157,12 +193,6 @@ const ProductPage = () => {
             <span className="text-sm font-medium">Back to Home</span>
           </button>
 
-          {/* Page Title */}
-          {/* <div className="mb-8">
-            <h1 className="text-[rgba(68,68,68,1)] text-2xl lg:text-4xl font-normal">All Products</h1>
-            <p className="text-gray-400 text-sm lg:text-xl font-light mt-1">{filtered.length} products</p>
-          </div> */}
-
           {/* Mobile Filter Toggle */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -187,11 +217,31 @@ const ProductPage = () => {
                   </button>
                 )}
 
-                {/* Collections Header */}
+                {/* Gender Filter */}
                 <div>
-                  <h2 className="text-sm font-bold text-[rgba(68,68,68,1)] border-b-2 pb-6 mb-3 uppercase tracking-wider">Categories</h2>
+                  <h2 className="text-sm font-bold text-[rgba(68,68,68,1)] border-b-2 pb-6 mb-3 uppercase tracking-wider">CATEGORIES</h2>
                   <div className="flex flex-col gap-2">
-                    {categories.map((cat) => (
+                    {["all", "men", "women"].map((g) => (
+                      <button
+                        key={g}
+                        onClick={() => { setGenderFilter(g); setSidebarOpen(false); }}
+                        className={`text-left text-sm py-1.5 px-3 transition-colors duration-200 capitalize ${
+                          genderFilter === g
+                            ? "border-l-2 border-[rgba(217,176,62,1)] text-black"
+                            : "text-gray-600 hover:bg-[rgba(88,57,49,0.1)]"
+                        }`}
+                      >
+                        {g === "all" ? "All" : g}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Categories */}
+                <div>
+                  <h2 className="text-sm font-bold text-[rgba(68,68,68,1)] border-b-2 pb-6 mb-3 uppercase tracking-wider">Product</h2>
+                  <div className="flex flex-col gap-2">
+                    {categoryNames.map((cat) => (
                       <button
                         key={cat}
                         onClick={() => { setSelectedType(cat); setSidebarOpen(false); }}
@@ -202,26 +252,6 @@ const ProductPage = () => {
                         }`}
                       >
                         {cat === "all" ? "All" : cat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Product Types */}
-                <div>
-                  <h2 className="text-sm font-bold text-[rgba(68,68,68,1)] border-b-2 pb-6 mb-3 uppercase tracking-wider">Products</h2>
-                  <div className="flex flex-col gap-2">
-                    {productTypes.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => { setSelectedType(type); setSidebarOpen(false); }}
-                        className={`text-left text-sm py-1.5 px-3 transition-colors duration-200 capitalize ${
-                          selectedType === type
-                            ? "border-l-2 border-[rgba(217,176,62,1)] text-black"
-                            : "text-gray-600 hover:bg-[rgba(88,57,49,0.1)]"
-                        }`}
-                      >
-                        {type === "all" ? "All" : type}
                       </button>
                     ))}
                   </div>
@@ -255,19 +285,49 @@ const ProductPage = () => {
                 {/* Price */}
                 <div>
                   <h2 className="text-sm font-bold text-[rgba(68,68,68,1)] border-b-2 pb-6 mb-3 uppercase tracking-wider">Price</h2>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <span>0</span>
+                  <div className="relative w-full h-8 mt-2">
+                    {/* Track background */}
+                    <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[4px] rounded-full bg-gray-200" />
+                    {/* Active range fill */}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 h-[4px] rounded-full"
+                      style={{
+                        backgroundColor: 'rgba(88,57,49,1)',
+                        left: `${(pendingPriceMin / PRICE_MAX) * 100}%`,
+                        right: `${100 - (pendingPriceRange / PRICE_MAX) * 100}%`,
+                      }}
+                    />
+                    {/* Min handle */}
                     <input
                       type="range"
                       min="0"
-                      max="1000000000"
-                      value={pendingPriceRange}
-                      onChange={(e) => setPendingPriceRange(Number(e.target.value))}
-                      className="w-full accent-[rgba(88,57,49,1)]"
+                      max={PRICE_MAX}
+                      value={pendingPriceMin}
+                      onChange={(e) => {
+                        const v = Math.min(Number(e.target.value), pendingPriceRange - 1000);
+                        setPendingPriceMin(v);
+                      }}
+                      className="absolute w-full top-0 h-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[rgba(88,57,49,1)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[rgba(88,57,49,1)] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-0"
+                      style={{ zIndex: pendingPriceMin > PRICE_MAX * 0.5 ? 5 : 3 }}
                     />
-                    <span>1BN</span>
+                    {/* Max handle */}
+                    <input
+                      type="range"
+                      min="0"
+                      max={PRICE_MAX}
+                      value={pendingPriceRange}
+                      onChange={(e) => {
+                        const v = Math.max(Number(e.target.value), pendingPriceMin + 1000);
+                        setPendingPriceRange(v);
+                      }}
+                      className="absolute w-full top-0 h-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[rgba(88,57,49,1)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[rgba(88,57,49,1)] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-0"
+                      style={{ zIndex: pendingPriceMin > PRICE_MAX * 0.5 ? 3 : 5 }}
+                    />
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">Max: ₦{formatPrice(pendingPriceRange)}</p>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Min: {formatPrice(pendingPriceMin)}</span>
+                    <span>Max: {formatPrice(pendingPriceRange)}</span>
+                  </div>
                   <div className="flex gap-2 mt-3">
                     <button
                       onClick={handleApplyPriceFilter}
@@ -295,8 +355,20 @@ const ProductPage = () => {
             <p className="text-gray-400 lg:text-lg text-sm py-4 font-light">All Product</p>
           </div>
 
-
-              {isMobile ? (
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="rounded-lg overflow-hidden shadow-sm animate-pulse">
+                      <div className="bg-gray-200 aspect-[3/4]" />
+                      <div className="p-4 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4" />
+                        <div className="h-3 bg-gray-200 rounded w-1/2" />
+                        <div className="h-4 bg-gray-200 rounded w-1/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : isMobile ? (
                 <div className="grid grid-cols-2 gap-3">
                   {visible.map((product, index) => (
                     <Link
@@ -306,6 +378,7 @@ const ProductPage = () => {
                     >
                       <div className="relative overflow-hidden aspect-[3/4]">
                         <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddToCart(product); }}
                           className="flex items-center gap-1 absolute top-2 right-2 bg-transparent border border-white hover:bg-primary hover:text-white text-white text-[10px] font-light px-2 py-1.5 rounded-md transition-all duration-300 cursor-pointer"
@@ -317,13 +390,13 @@ const ProductPage = () => {
                           <img src={stock} alt="Out of Stock" className="absolute top-0 left-2 w-[50px] h-auto" />
                         )}
                         <div className="absolute bottom-2 right-2">
-                          <HeartIcon filled={favorites.has(product.id)} onClick={() => toggleFavorite(product.id)} />
+                          <HeartIcon filled={isFavorited(product.id)} onClick={() => toggleFavorite(product.id)} />
                         </div>
                       </div>
                       <div className="p-2 space-y-1">
                         <p className="text-[rgba(68,68,68,1)] text-xs font-medium line-clamp-1">{product.name}</p>
                         <StarRating rating={product.rating} />
-                        <p className="text-[rgba(68,68,68,1)] text-sm font-bold">₦{formatPrice(product.price)}</p>
+                        <p className="text-[rgba(68,68,68,1)] text-sm font-bold">{formatPrice(product.price)}</p>
                       </div>
                     </Link>
                   ))}
@@ -344,6 +417,7 @@ const ProductPage = () => {
                       >
                         <div className="relative overflow-hidden aspect-[3/4]">
                           <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
                           <button
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddToCart(product); }}
                             className="flex items-center gap-2 absolute top-3 right-3 bg-transparent border border-white hover:bg-primary hover:text-white text-white text-xs font-light px-4 py-3 rounded-lg transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
@@ -355,13 +429,13 @@ const ProductPage = () => {
                             <img src={stock} alt="Out of Stock" className="absolute top-0 left-3 w-[80px] h-auto" />
                           )}
                           <div className="absolute bottom-3 right-3">
-                            <HeartIcon filled={favorites.has(product.id)} onClick={() => toggleFavorite(product.id)} />
+                            <HeartIcon filled={isFavorited(product.id)} onClick={() => toggleFavorite(product.id)} />
                           </div>
                         </div>
                         <div className="p-4 space-y-2">
                           <p className="text-[rgba(68,68,68,1)] text-sm md:text-xl font-medium">{product.name}</p>
                           <StarRating rating={product.rating} />
-                          <p className="text-[rgba(68,68,68,1)] text-base font-bold">₦{formatPrice(product.price)}</p>
+                          <p className="text-[rgba(68,68,68,1)] text-base font-bold">{formatPrice(product.price)}</p>
                         </div>
                       </Link>
                     );
@@ -370,7 +444,7 @@ const ProductPage = () => {
               )}
 
               {/* Empty State */}
-              {visible.length === 0 && (
+              {!loading && visible.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                   <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />

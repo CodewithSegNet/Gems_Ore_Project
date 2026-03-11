@@ -1,19 +1,21 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useMemo } from "react";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+  // Applied discount: { id, name, discount_type, type, value, discount_amount, code, product_id, source: 'auto'|'coupon' }
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
 
-  const addToCart = (product) => {
+  const addToCart = (product, quantity = 1) => {
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity }];
     });
   };
 
@@ -33,10 +35,15 @@ export const CartProvider = ({ children }) => {
     );
   };
 
+  const clearCart = () => {
+    setCartItems([]);
+    setAppliedDiscount(null);
+  };
+
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discountRate = 0.10;
-  const discount = subtotal * discountRate;
+
+  const discount = appliedDiscount ? appliedDiscount.discount_amount : 0;
   const vatRate = 0.075;
   const vat = subtotal * vatRate;
   const total = subtotal + vat - discount;
@@ -47,11 +54,14 @@ export const CartProvider = ({ children }) => {
       addToCart,
       removeFromCart,
       updateQuantity,
+      clearCart,
       cartCount,
       subtotal,
       discount,
       vat,
       total,
+      appliedDiscount,
+      setAppliedDiscount,
     }}>
       {children}
     </CartContext.Provider>

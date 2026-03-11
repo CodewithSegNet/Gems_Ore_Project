@@ -2,7 +2,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../contexts/cartContext";
 import { useGender } from "../contexts/genderContext";
-import { newestProducts, formatPrice } from "../data/products";
+import { useFavorites } from "../contexts/FavoritesContext";
+import storefrontApi from "../services/api";
+import { useCurrency } from "../contexts/CurrencyContext";
 import MobileSwiper from "./MobileSwiper";
 
 import icon2 from "../assets/icon2.png";
@@ -11,6 +13,8 @@ import filterIcon from "../assets/filter.png";
 import news from "../assets/foundation.png";
 
 const ITEMS_PER_PAGE = 6;
+
+
 
 const StarRating = ({ rating }) => (
   <div className="flex items-center gap-1">
@@ -46,24 +50,30 @@ const HeartIcon = ({ filled, onClick }) => (
 );
 
 const NewestCollections = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
-  const [favorites, setFavorites] = useState(new Set());
   const [newlyRevealed, setNewlyRevealed] = useState(new Set());
   const [filterOpen, setFilterOpen] = useState(false);
 
   // Applied filter state (what's actually active)
   const [appliedPriceRange, setAppliedPriceRange] = useState(20000000);
+  const [appliedPriceMin, setAppliedPriceMin] = useState(0);
   const [appliedInStockOnly, setAppliedInStockOnly] = useState(false);
   const [appliedOutOfStockOnly, setAppliedOutOfStockOnly] = useState(false);
 
   // Pending filter state (what the user is adjusting in the dropdown)
   const [pendingPriceRange, setPendingPriceRange] = useState(20000000);
+  const [pendingPriceMin, setPendingPriceMin] = useState(0);
   const [pendingInStockOnly, setPendingInStockOnly] = useState(false);
   const [pendingOutOfStockOnly, setPendingOutOfStockOnly] = useState(false);
+  const PRICE_MAX = 20000000;
 
   const filterRef = useRef(null);
   const { addToCart } = useCart();
   const { gender } = useGender();
+  const { isFavorited, toggleFavorite } = useFavorites();
+  const { formatPrice, symbol } = useCurrency();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -73,9 +83,40 @@ const NewestCollections = () => {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const genderFilteredProducts = newestProducts.filter((p) => p.gender === gender);
-  const inStockCount = genderFilteredProducts.filter((p) => p.inStock).length;
-  const outOfStockCount = genderFilteredProducts.filter((p) => !p.inStock).length;
+  // Fetch newest collection products from API
+  useEffect(() => {
+    const fetchNewest = async () => {
+      setLoading(true);
+      try {
+        const genderParam = gender === "men" ? "male" : "female";
+        const data = await storefrontApi.products.getAll({
+          is_new_collection: "true",
+          gender: genderParam,
+          status: "active",
+        });
+        setProducts(data.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          image: p.image || (p.images?.[0]?.image_url) || "",
+          rating: 5.0,
+          inStock: p.stock > 0,
+          category: p.category_name?.toLowerCase() || "",
+          gender: p.gender === "male" ? "men" : "women",
+        })));
+      } catch (e) {
+        console.error("Failed to fetch newest collections:", e);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNewest();
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [gender]);
+
+  const inStockCount = products.filter((p) => p.inStock).length;
+  const outOfStockCount = products.filter((p) => !p.inStock).length;
 
   // Close filter dropdown when clicking outside
   useEffect(() => {
@@ -90,6 +131,7 @@ const NewestCollections = () => {
 
   const handleApplyFilter = () => {
     setAppliedPriceRange(pendingPriceRange);
+    setAppliedPriceMin(pendingPriceMin);
     setAppliedInStockOnly(pendingInStockOnly);
     setAppliedOutOfStockOnly(pendingOutOfStockOnly);
     setVisibleCount(ITEMS_PER_PAGE);
@@ -97,10 +139,12 @@ const NewestCollections = () => {
   };
 
   const handleClearFilter = () => {
-    setPendingPriceRange(20000000);
+    setPendingPriceRange(PRICE_MAX);
+    setPendingPriceMin(0);
     setPendingInStockOnly(false);
     setPendingOutOfStockOnly(false);
-    setAppliedPriceRange(20000000);
+    setAppliedPriceRange(PRICE_MAX);
+    setAppliedPriceMin(0);
     setAppliedInStockOnly(false);
     setAppliedOutOfStockOnly(false);
     setVisibleCount(ITEMS_PER_PAGE);
@@ -108,8 +152,8 @@ const NewestCollections = () => {
   };
 
   // Filter products using applied values
-  const filteredProducts = genderFilteredProducts.filter((p) => {
-    if (p.price > appliedPriceRange) return false;
+  const filteredProducts = products.filter((p) => {
+    if (p.price < appliedPriceMin || p.price > appliedPriceRange) return false;
     if (appliedInStockOnly && !p.inStock) return false;
     if (appliedOutOfStockOnly && p.inStock) return false;
     return true;
@@ -118,17 +162,7 @@ const NewestCollections = () => {
   const visible = filteredProducts.slice(0, visibleCount);
   const hasMore = visibleCount < filteredProducts.length;
 
-  const toggleFavorite = (productId) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(productId)) {
-        next.delete(productId);
-      } else {
-        next.add(productId);
-      }
-      return next;
-    });
-  };
+
 
   const handleShowMore = () => {
     const prevCount = visibleCount;
@@ -141,6 +175,38 @@ const NewestCollections = () => {
     setVisibleCount(nextCount);
     setTimeout(() => setNewlyRevealed(new Set()), 800);
   };
+
+  if (loading) {
+    return (
+      <section className="max-w-screen-2xl mx-auto my-[64px]">
+        <div className="mx-4">
+          <div className="flex items-center justify-between mb-[34px]">
+            <div className="text-start">
+              <div className="flex items-center gap-2">
+                <h1 className="text-[rgba(68,68,68,1)] lg:text-4xl text-2xl font-normal">Newest Collections</h1>
+                <img className="h-14 w-14" src={news} alt="" />
+              </div>
+              <p className="text-gray-600 lg:text-xl text-sm font-light">Discover our latest expressions of brilliance</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="rounded-lg overflow-hidden shadow-sm animate-pulse">
+                <div className="bg-gray-200" style={{ height: "380px" }} />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-4 bg-gray-200 rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (products.length === 0) return null;
 
   return (
     <section className="max-w-screen-2xl mx-auto my-[64px]">
@@ -194,21 +260,49 @@ const NewestCollections = () => {
                   <h4 className="text-xs font-light text-[rgba(68,68,68,1)] tracking-wider mb-2">
                     By Price
                   </h4>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <span>0</span>
+                  <div className="relative w-full h-8 mt-1">
+                    {/* Track background */}
+                    <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[4px] rounded-full bg-gray-200" />
+                    {/* Active range fill */}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 h-[4px] rounded-full"
+                      style={{
+                        backgroundColor: 'rgba(88,57,49,1)',
+                        left: `${(pendingPriceMin / PRICE_MAX) * 100}%`,
+                        right: `${100 - (pendingPriceRange / PRICE_MAX) * 100}%`,
+                      }}
+                    />
+                    {/* Min handle */}
                     <input
                       type="range"
                       min="0"
-                      max="20000000"
-                      value={pendingPriceRange}
-                      onChange={(e) => setPendingPriceRange(Number(e.target.value))}
-                      className="w-full accent-[rgba(88,57,49,1)]"
+                      max={PRICE_MAX}
+                      value={pendingPriceMin}
+                      onChange={(e) => {
+                        const v = Math.min(Number(e.target.value), pendingPriceRange - 1000);
+                        setPendingPriceMin(v);
+                      }}
+                      className="absolute w-full top-0 h-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[rgba(88,57,49,1)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[rgba(88,57,49,1)] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-0"
+                      style={{ zIndex: pendingPriceMin > PRICE_MAX * 0.5 ? 5 : 3 }}
                     />
-                    <span>20M</span>
+                    {/* Max handle */}
+                    <input
+                      type="range"
+                      min="0"
+                      max={PRICE_MAX}
+                      value={pendingPriceRange}
+                      onChange={(e) => {
+                        const v = Math.max(Number(e.target.value), pendingPriceMin + 1000);
+                        setPendingPriceRange(v);
+                      }}
+                      className="absolute w-full top-0 h-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[rgba(88,57,49,1)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[rgba(88,57,49,1)] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-0"
+                      style={{ zIndex: pendingPriceMin > PRICE_MAX * 0.5 ? 3 : 5 }}
+                    />
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Max: ₦{formatPrice(pendingPriceRange)}
-                  </p>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Min: {formatPrice(pendingPriceMin)}</span>
+                    <span>Max: {formatPrice(pendingPriceRange)}</span>
+                  </div>
                 </div>
 
                 {/* Availability */}
@@ -273,6 +367,7 @@ const NewestCollections = () => {
                 >
                   <div className="relative overflow-hidden" style={{ height: "380px" }}>
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
                     <button
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
                       className="flex items-center gap-2 absolute top-3 right-3 bg-transparent border border-white hover:bg-[rgba(88,57,49,1)] hover:text-white text-white text-xs font-light px-4 py-3 rounded-lg transition-all duration-300 cursor-pointer"
@@ -281,7 +376,7 @@ const NewestCollections = () => {
                       Shop Now
                     </button>
                     <div className="absolute bottom-3 right-3">
-                      <HeartIcon filled={favorites.has(product.id)} onClick={() => toggleFavorite(product.id)} />
+                      <HeartIcon filled={isFavorited(product.id)} onClick={() => toggleFavorite(product.id)} />
                     </div>
                     {!product.inStock && (
                       <img src={stock} alt="Out of Stock" className="absolute top-0 left-3 w-[80px] h-auto" />
@@ -290,7 +385,7 @@ const NewestCollections = () => {
                   <div className="p-4 space-y-2">
                     <p className="text-[rgba(68,68,68,1)] text-sm font-medium">{product.name}</p>
                     <StarRating rating={product.rating} />
-                    <p className="text-[rgba(68,68,68,1)] text-base font-bold">₦{formatPrice(product.price)}</p>
+                    <p className="text-[rgba(68,68,68,1)] text-base font-bold">{formatPrice(product.price)}</p>
                   </div>
                 </Link>
               );
@@ -313,6 +408,7 @@ const NewestCollections = () => {
                 >
                   <div className="relative overflow-hidden" style={{ height: "380px" }}>
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
                     <button
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
                       className="flex items-center gap-2 absolute top-3 right-3 bg-transparent border border-white hover:bg-[rgba(88,57,49,1)] hover:text-white text-white text-xs font-light px-4 py-3 rounded-lg transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
@@ -321,7 +417,7 @@ const NewestCollections = () => {
                       Shop Now
                     </button>
                     <div className="absolute bottom-3 right-3">
-                      <HeartIcon filled={favorites.has(product.id)} onClick={() => toggleFavorite(product.id)} />
+                      <HeartIcon filled={isFavorited(product.id)} onClick={() => toggleFavorite(product.id)} />
                     </div>
                     {!product.inStock && (
                       <img src={stock} alt="Out of Stock" className="absolute top-0 left-3 w-[80px] h-auto" />
@@ -330,7 +426,7 @@ const NewestCollections = () => {
                   <div className="p-4 space-y-2">
                     <p className="text-[rgba(68,68,68,1)] text-sm md:text-xl font-medium">{product.name}</p>
                     <StarRating rating={product.rating} />
-                    <p className="text-[rgba(68,68,68,1)] text-base font-bold">₦{formatPrice(product.price)}</p>
+                    <p className="text-[rgba(68,68,68,1)] text-base font-bold">{formatPrice(product.price)}</p>
                   </div>
                 </Link>
               );

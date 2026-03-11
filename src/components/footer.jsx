@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import storefrontApi from "../services/api";
 import callIcon from "../assets/call.png";
 import whatsappIcon from "../assets/whatsapp.png";
 import emailIcon from "../assets/email.png";
@@ -22,15 +23,43 @@ const contactItems = [
 ];
 
 const followItems = [
-  { icon: instagramIcon, label: "GEMS ORE", href: "https://www.instagram.com/gems_ore" },
+  { icon: instagramIcon, label: "GEMS ORE", href: "https://www.instagram.com/gems.ore?igsh=aGZ2djQxcm9hcjgz" },
   { icon: facebookIcon, label: "GEMS ORE", href: "https://www.facebook.com/gems_ore" },
-  { icon: tiktokIcon, label: "gems.ore", href: "https://www.tiktok.com/@gems_ore" },
+  { icon: tiktokIcon, label: "gems.ore", href: "https://www.tiktok.com/@gems.ore?_r=1&_t=ZS-94FSLj30eyT" },
     { icon: snapchat, label: "gems.ore", href: "https://www.snapchat.com/@gems_ore" },
-  { icon: twitterIcon, label: "gemsorelimited", href: "https://www.twitter.com/gems_ore" },
+  { icon: twitterIcon, label: "gemsorelimited", href: "https://x.com/gemsorelimited?s=21" },
 
 ];
 
 const Footer = () => {
+  const [subEmail, setSubEmail] = useState("");
+  const [subLoading, setSubLoading] = useState(false);
+  const [subMessage, setSubMessage] = useState("");
+  const [subError, setSubError] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (!subEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(subEmail)) {
+      setSubMessage("Please enter a valid email");
+      setSubError(true);
+      return;
+    }
+    setSubLoading(true);
+    setSubMessage("");
+    setSubError(false);
+    try {
+      const res = await storefrontApi.subscribers.subscribe(subEmail);
+      setSubMessage(res?.message || "Successfully subscribed!");
+      setSubError(false);
+      setSubEmail("");
+    } catch (err) {
+      setSubMessage(err.message || "Subscription failed");
+      setSubError(true);
+    } finally {
+      setSubLoading(false);
+      setTimeout(() => setSubMessage(""), 5000);
+    }
+  };
+
   return (
     <footer className="bg-black text-white">
       {/* Newsletter */}
@@ -39,15 +68,27 @@ const Footer = () => {
         <div>
           <p className="text-2xl md:text-3xl font-normal">Sign up for our newsletter</p>
         </div>
-        <div className="flex w-full gap-5 md:w-auto">
-          <input
-            type="email"
-            placeholder="Your Email Address"
-            className="bg-black border-[1px] border-white rounded-lg px-4 py-3 text-sm text-white placeholder-white/40 outline-none w-full md:w-[300px] focus:border-[#958169] transition-colors duration-300"
-          />
-          <button className="hover:bg-[#7a6a56] border-[1px] border-white transition-colors duration-300 text-white font-bold text-sm px-6 py-3 rounded-lg whitespace-nowrap">
-            Subscribe
-          </button>
+        <div className="flex flex-col gap-2">
+          <div className="flex w-full gap-5 md:w-auto">
+            <input
+              type="email"
+              placeholder="Your Email Address"
+              value={subEmail}
+              onChange={(e) => setSubEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
+              className="bg-black border-[1px] border-white rounded-lg px-4 py-3 text-sm text-white placeholder-white/40 outline-none w-full md:w-[300px] focus:border-[#958169] transition-colors duration-300"
+            />
+            <button
+              onClick={handleSubscribe}
+              disabled={subLoading}
+              className="hover:bg-[#7a6a56] border-[1px] border-white transition-colors duration-300 text-white font-bold text-sm px-6 py-3 rounded-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {subLoading ? "..." : "Subscribe"}
+            </button>
+          </div>
+          {subMessage && (
+            <p className={`text-xs ${subError ? "text-red-400" : "text-green-400"}`}>{subMessage}</p>
+          )}
         </div>
 
         </div>

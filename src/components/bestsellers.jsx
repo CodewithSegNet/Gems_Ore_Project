@@ -2,12 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../contexts/cartContext";
 import { useGender } from "../contexts/genderContext";
-import { bestSellerProducts, formatPrice } from "../data/products";
+import { useFavorites } from "../contexts/FavoritesContext";
+import storefrontApi from "../services/api";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 import icon2 from "../assets/icon2.png";
 import MobileSwiper from "./MobileSwiper";
 
 const ITEMS_PER_PAGE = 6;
+
+
 
 const StarRating = ({ rating }) => (
   <div className="flex items-center gap-1">
@@ -43,10 +47,13 @@ const HeartIcon = ({ filled, onClick }) => (
 );
 
 const BestSellers = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
-  const [favorites, setFavorites] = useState(new Set());
   const [newlyRevealed, setNewlyRevealed] = useState(new Set());
   const { addToCart } = useCart();
+  const { isFavorited, toggleFavorite } = useFavorites();
+  const { formatPrice } = useCurrency();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -57,25 +64,47 @@ const BestSellers = () => {
   }, []);
 
   const { gender } = useGender();
-  const genderFiltered = bestSellerProducts.filter((p) => p.gender === gender);
-  const visible = genderFiltered.slice(0, visibleCount);
-  const hasMore = visibleCount < genderFiltered.length;
 
-  const toggleFavorite = (productId) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(productId)) {
-        next.delete(productId);
-      } else {
-        next.add(productId);
+  // Fetch best seller products from API
+  useEffect(() => {
+    const fetchBestSellers = async () => {
+      setLoading(true);
+      try {
+        const genderParam = gender === "men" ? "male" : "female";
+        const data = await storefrontApi.products.getAll({
+          is_best_seller: "true",
+          gender: genderParam,
+          status: "active",
+        });
+        setProducts(data.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          image: p.image || (p.images?.[0]?.image_url) || "",
+          rating: 5.0,
+          inStock: p.stock > 0,
+          category: p.category_name?.toLowerCase() || "",
+          gender: p.gender === "male" ? "men" : "women",
+        })));
+      } catch (e) {
+        console.error("Failed to fetch best sellers:", e);
+        setProducts([]);
+      } finally {
+        setLoading(false);
       }
-      return next;
-    });
-  };
+    };
+    fetchBestSellers();
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [gender]);
+
+  const visible = products.slice(0, visibleCount);
+  const hasMore = visibleCount < products.length;
+
+
 
   const handleShowMore = () => {
     const prevCount = visibleCount;
-    const nextCount = Math.min(prevCount + ITEMS_PER_PAGE, genderFiltered.length);
+    const nextCount = Math.min(prevCount + ITEMS_PER_PAGE, products.length);
     const revealed = new Set();
     for (let i = prevCount; i < nextCount; i++) {
       revealed.add(i);
@@ -84,6 +113,35 @@ const BestSellers = () => {
     setVisibleCount(nextCount);
     setTimeout(() => setNewlyRevealed(new Set()), 800);
   };
+
+  if (loading) {
+    return (
+      <section className="max-w-screen-2xl mx-auto my-[64px]">
+        <div className="mx-4">
+          <div className="flex items-center justify-between mb-[34px]">
+            <div className="text-start">
+              <h1 className="text-[rgba(68,68,68,1)] lg:text-4xl text-2xl font-normal">Best Sellers</h1>
+              <p className="text-gray-600 lg:text-xl text-sm font-light">Client favorites, crafted to captivate</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="rounded-lg overflow-hidden shadow-sm animate-pulse">
+                <div className="bg-gray-200" style={{ height: "380px" }} />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-4 bg-gray-200 rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (products.length === 0) return null;
 
   return (
     <section className="max-w-screen-2xl mx-auto my-[64px]">
@@ -119,6 +177,7 @@ const BestSellers = () => {
               >
                 <div className="relative overflow-hidden" style={{ height: "380px" }}>
                   <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
                     className="flex items-center gap-2 absolute top-3 right-3 bg-transparent border border-white hover:bg-[rgba(88,57,49,1)] hover:text-white text-white text-xs font-light px-4 py-3 rounded-lg transition-all duration-300 cursor-pointer"
@@ -127,13 +186,13 @@ const BestSellers = () => {
                     Shop Now
                   </button>
                   <div className="absolute bottom-3 right-3">
-                    <HeartIcon filled={favorites.has(product.id)} onClick={() => toggleFavorite(product.id)} />
+                    <HeartIcon filled={isFavorited(product.id)} onClick={() => toggleFavorite(product.id)} />
                   </div>
                 </div>
                 <div className="p-4 space-y-2">
                   <p className="text-[rgba(68,68,68,1)] text-sm font-medium">{product.name}</p>
                   <StarRating rating={product.rating} />
-                  <p className="text-[rgba(68,68,68,1)] text-base font-bold">₦{formatPrice(product.price)}</p>
+                  <p className="text-[rgba(68,68,68,1)] text-base font-bold">{formatPrice(product.price)}</p>
                 </div>
               </Link>
             )}
@@ -154,6 +213,7 @@ const BestSellers = () => {
                 >
                   <div className="relative overflow-hidden" style={{ height: "380px" }}>
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
                     <button
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
                       className="flex items-center gap-2 absolute top-3 right-3 bg-transparent border border-white hover:bg-[rgba(88,57,49,1)] hover:text-white text-white text-xs font-light px-4 py-3 rounded-lg transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
@@ -162,13 +222,13 @@ const BestSellers = () => {
                       Shop Now
                     </button>
                     <div className="absolute bottom-3 right-3">
-                      <HeartIcon filled={favorites.has(product.id)} onClick={() => toggleFavorite(product.id)} />
+                      <HeartIcon filled={isFavorited(product.id)} onClick={() => toggleFavorite(product.id)} />
                     </div>
                   </div>
                   <div className="p-4 space-y-2">
                     <p className="text-[rgba(68,68,68,1)] text-sm md:text-xl font-medium">{product.name}</p>
                     <StarRating rating={product.rating} />
-                    <p className="text-[rgba(68,68,68,1)] text-base font-bold">₦{formatPrice(product.price)}</p>
+                    <p className="text-[rgba(68,68,68,1)] text-base font-bold">{formatPrice(product.price)}</p>
                   </div>
                 </Link>
               );
