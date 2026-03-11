@@ -203,6 +203,7 @@ const CartPage = () => {
                     </div>
                   ))}
                 </div>
+                
 
                 {/* Additional Comments */}
                 <div className="mt-6 rounded-2xl p-6 shadow-sm">
