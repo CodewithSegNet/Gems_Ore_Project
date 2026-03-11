@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingCart, Star, Settings as SettingsIcon, LogOut, FolderTree, MessageSquare, Percent, FileText, Menu, X, Truck } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Star, Settings as SettingsIcon, LogOut, FolderTree, MessageSquare, Percent, FileText, Menu, X, Truck, Mail } from "lucide-react";
 import logo from "../../assets/logos.png";
 import { cn } from "./ui/utils";
 import { Button } from "./ui/button";
@@ -15,6 +15,7 @@ const navigation = [
   { name: "Discounts", href: "/admin/discounts", icon: Percent },
   { name: "Shipping", href: "/admin/shipping", icon: Truck },
   { name: "Reports", href: "/admin/reports", icon: FileText },
+  { name: "Subscribers", href: "/admin/subscribers", icon: Mail },
   { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
 ];
 

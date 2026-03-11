@@ -44,7 +44,7 @@ export const adminApi = {
   // Auth
   auth: {
     login: (email: string, password: string) =>
-      request<any>("/auth/login", {
+      request<any>("/auth/admin-login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       }),
@@ -176,6 +176,11 @@ export const adminApi = {
     getChartData: () => request<any>("/dashboard/chart-data"),
     getFinancialReportData: (range: string = "6months") =>
       request<any>(`/dashboard/financial-report-data?range=${range}`),
+  },
+
+  // Subscribers
+  subscribers: {
+    getAll: () => request<any[]>("/subscribers"),
   },
 
   // Upload

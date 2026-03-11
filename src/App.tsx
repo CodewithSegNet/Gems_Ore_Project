@@ -53,6 +53,9 @@ const AdminSettings = lazy(() =>
 const AdminShipping = lazy(() =>
   import("./admin/pages/shipping").then((m) => ({ default: m.Shipping }))
 );
+const AdminSubscribers = lazy(() =>
+  import("./admin/pages/subscribers").then((m) => ({ default: m.Subscribers }))
+);
 
 // Admin auth guard
 function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -179,6 +182,14 @@ function App() {
               element={
                 <Suspense fallback={<AdminLoading />}>
                   <AdminFinancialReports />
+                </Suspense>
+              }
+            />
+            <Route
+              path="subscribers"
+              element={
+                <Suspense fallback={<AdminLoading />}>
+                  <AdminSubscribers />
                 </Suspense>
               }
             />
