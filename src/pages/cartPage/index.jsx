@@ -7,7 +7,7 @@ import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
 import bar from "../../assets/Rectangle2.svg";
 import fast from "../../assets/fast.png";
-import vector from "../../assets/vector.svg";
+import shield from "../../assets/shield.svg";
 import { useCurrency } from "../../contexts/CurrencyContext";
 
 const CartPage = () => {
@@ -212,7 +212,7 @@ const CartPage = () => {
                     className="w-full px-4 bg-transparent py-3 border border-gray-400 rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[rgba(88,57,49,0.2)] focus:border-[rgba(88,57,49,1)] transition-all placeholder:text-gray-400" />
 
                     <div className="flex items-center gap-3 pt-5">
-                      <img src={vector} alt="" />
+                      <img src={shield} alt="" />
                       <p className="text-sm">Secure Shopping Guarantee</p>
                     </div>
                 </div>
