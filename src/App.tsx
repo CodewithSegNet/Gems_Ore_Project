@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import HomePage from "./pages/homePage";
 import ProductPage from "./pages/productPage";
@@ -68,6 +68,19 @@ function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
   return token ? <>{children}</> : <Navigate to="/admin/login" replace />;
 }
 
+// Customer auth guard – redirects to login if not authenticated
+function CustomerProtectedRoute({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem("customer_access_token");
+  return token ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+// Only render WhatsApp widget on non-admin pages
+function ConditionalWhatsApp() {
+  const location = useLocation();
+  if (location.pathname.startsWith("/admin")) return null;
+  return <WhatsAppWidget />;
+}
+
 // Loading fallback for lazy-loaded admin pages
 function AdminLoading() {
   return (
@@ -86,7 +99,7 @@ function App() {
       <CurrencyProvider>
       <CartProvider>
         <ScrollToTop />
-        <WhatsAppWidget />
+        <ConditionalWhatsApp />
         <Routes>
           {/* Customer-facing routes */}
           <Route path="/" element={<HomePage />} />
@@ -94,11 +107,11 @@ function App() {
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/transaction-history" element={<TransactionHistory />} />
+          <Route path="/checkout" element={<CustomerProtectedRoute><CheckoutPage /></CustomerProtectedRoute>} />
+          <Route path="/transaction-history" element={<CustomerProtectedRoute><TransactionHistory /></CustomerProtectedRoute>} />
           <Route path="/cart" element={<CartPage />} />
-          <Route path="/crypto-payment/:orderId" element={<CryptoPaymentPage />} />
-          <Route path="/order-success/:orderId" element={<OrderSuccessPage />} />
+          <Route path="/crypto-payment/:orderId" element={<CustomerProtectedRoute><CryptoPaymentPage /></CustomerProtectedRoute>} />
+          <Route path="/order-success/:orderId" element={<CustomerProtectedRoute><OrderSuccessPage /></CustomerProtectedRoute>} />
           <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
           <Route path="/refund-policy" element={<RefundPolicyPage />} />
           <Route path="/terms" element={<TermsPage />} />

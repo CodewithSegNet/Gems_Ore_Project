@@ -76,6 +76,9 @@ const LoginPage = () => {
     setError("");
     setLoading(true);
     try {
+      // First check if the email is registered
+      await storefrontApi.auth.checkEmail(email);
+      // Email exists, now send OTP
       setOtpSending(true);
       await storefrontApi.auth.sendOtp(email);
       setStep("otp");

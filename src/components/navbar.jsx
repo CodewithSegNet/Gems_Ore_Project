@@ -474,7 +474,7 @@ const Navbar = ({ dark = true }) => {
                   <button onClick={() => setWishlistQty(fav.product_id, getWishlistQty(fav.product_id) + 1)} className="px-3 py-2 lg:py-3 text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer">+</button>
                 </div>
                             <button
-                              onClick={() => { addToCart({ id: fav.product_id, name: productName, price: productPrice, image: productImage }, getWishlistQty(fav.product_id)); setWishlistOpen(false); setCartOpen(true); }}
+                              onClick={() => { if (!isLoggedIn) { setWishlistOpen(false); navigate('/login'); return; } addToCart({ id: fav.product_id, name: productName, price: productPrice, image: productImage }, getWishlistQty(fav.product_id)); setWishlistOpen(false); setCartOpen(true); }}
                               className="flex w-fit px-4 py-[13px] lg:py-[1.1rem] bg-black text-white text-[10px] lg:text-xs font-medium rounded-md hover:bg-[rgba(68,47,39,1)] transition-colors duration-300 cursor-pointer"
                             >
                               Add to Cart
@@ -500,7 +500,7 @@ const Navbar = ({ dark = true }) => {
                         </div>
                       </div>
                                                 <button
-                            onClick={() => { addToCart({ id: fav.product_id, name: productName, price: productPrice, image: productImage }, getWishlistQty(fav.product_id)); setWishlistOpen(false); navigate('/checkout'); }}
+                            onClick={() => { if (!isLoggedIn) { setWishlistOpen(false); navigate('/login'); return; } addToCart({ id: fav.product_id, name: productName, price: productPrice, image: productImage }, getWishlistQty(fav.product_id)); setWishlistOpen(false); navigate('/checkout'); }}
                             className="w-full py-[1.1rem] text-center border border-black text-black text-xs font-medium rounded-md hover:bg-[rgba(88,57,49,1)] hover:border-[rgba(88,57,49,1)] hover:text-white transition-all duration-300 cursor-pointer"
                           >
                             Buy Outright
@@ -862,7 +862,7 @@ const Navbar = ({ dark = true }) => {
             </div>
 
 <div className="mx-5 my-5">
-                        <Link to="/checkout" onClick={() => setCartOpen(false)} className="w-full py-5 bg-black text-white rounded-lg font-medium hover:bg-[rgba(68,47,39,1)] transition-colors duration-300 cursor-pointer block text-center">
+                        <Link to={isLoggedIn ? "/checkout" : "/login"} onClick={() => setCartOpen(false)} className="w-full py-5 bg-black text-white rounded-lg font-medium hover:bg-[rgba(68,47,39,1)] transition-colors duration-300 cursor-pointer block text-center">
                 Proceed to CheckOut
               </Link>
               <Link to="/cart" onClick={() => setCartOpen(false)} className="w-full py-5 bg-transparent border border-black text-black rounded-lg font-medium hover:bg-[rgba(68,47,39,1)] transition-colors duration-300 cursor-pointer block text-center mt-3 text-sm text-[rgba(88,57,49,1)] hover:text-white">

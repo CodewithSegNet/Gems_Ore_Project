@@ -13,7 +13,14 @@ import usdt from "../assets/usdt.png";
 import twitterIcon from "../assets/twitter.png";
 import snapchat from "../assets/snapchat.png";
 
-const shopItems = ["Watches", "Rings", "Earrings", "Bracelets", "Necklaces", "Anklets"];
+const shopItems = [
+  { label: "Watches", slug: "watches" },
+  { label: "Rings", slug: "rings" },
+  { label: "Earrings", slug: "earrings" },
+  { label: "Bracelets", slug: "bracelets" },
+  { label: "Necklaces", slug: "necklaces" },
+  { label: "Anklets", slug: "anklets" },
+];
 const policyItems = [
   { label: "Refund Policy", to: "/refund-policy" },
   { label: "Shipping Policy", to: "/shipping-policy" },
@@ -23,9 +30,9 @@ const policyItems = [
 const locationItems = ["Abuja (FCT)"];
 
 const contactItems = [
-  { icon: callIcon, label: "+234 80383828292", href: "tel:+23480383828292" },
+  { icon: callIcon, label: "+234 8052842509", href: "tel:+2348052842509" },
 //   { icon: whatsappIcon, label: "+234 80383828292", href: "https://wa.me/23480383828292" },
-  { icon: emailIcon, label: "gemsorelimited@gmail.com", href: "mailto:gemsorelimited@gmail.com" },
+  { icon: emailIcon, label: "contact@gemsore.com", href: "mailto:contact@gemsore.com" },
 ];
 
 const followItems = [
@@ -111,8 +118,10 @@ const Footer = () => {
           </div>
           <ul className="flex flex-col gap-2.5">
             {shopItems.map((item, i) => (
-              <li key={i} className="text-white/60 text-sm hover:text-[#958169] cursor-pointer transition-colors duration-300">
-                {item}
+              <li key={i}>
+                <Link to={`/products?category=${item.slug}`} className="text-white/60 text-sm hover:text-[#958169] cursor-pointer transition-colors duration-300">
+                  {item.label}
+                </Link>
               </li>
             ))}
           </ul>
@@ -169,7 +178,7 @@ const Footer = () => {
             ))}
           </ul>
           <p style={{ fontFamily: "'Helvetica', 'Arial', sans-serif", fontWeight: 300, fontStyle: 'normal', fontSize: '12px', lineHeight: '100%', letterSpacing: '0%' }} className="text-[#797979] mt-1 ">
-            No.2 Sakono Street, Roualty Square Mall, Wuse II
+            No.2 Sakono Street, Royalty Square Mall, Wuse II
           </p>
         </div>
 

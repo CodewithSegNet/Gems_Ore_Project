@@ -310,6 +310,10 @@ const ProductDetailPage = () => {
   const total = subtotal + vat;
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
@@ -483,7 +487,7 @@ const ProductDetailPage = () => {
                 </button>
               </div>
 
-              <button onClick={() => { handleAddToCart(); navigate('/checkout'); }} className="w-full md:w-[360px] py-4 border border-black text-black hover:bg-primary hover:border-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-light transition-all duration-300 cursor-pointer">Buy Outright</button>
+              <button onClick={() => { if (!isAuthenticated) { navigate('/login'); return; } handleAddToCart(); navigate('/checkout'); }} className="w-full md:w-[360px] py-4 border border-black text-black hover:bg-primary hover:border-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-light transition-all duration-300 cursor-pointer">Buy Outright</button>
 
               <div className="flex items-center gap-2 text-sm my-4 text-gray-500">
                 <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

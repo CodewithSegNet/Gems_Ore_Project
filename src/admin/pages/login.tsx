@@ -5,7 +5,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Gem } from "lucide-react";
-import logo from "../../assets/logos.png"
+import logo from "../../assets/logoreview.png"
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:7001";
 
@@ -49,8 +49,8 @@ export function Login() {
       <div className="w-full max-w-md space-y-6 ">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <div className="w-28 h-28 rounded-2xl flex items-center justify-center shadow-md bg-white">
-            <img src={logo} className="w-16 h-16 text-white" />
+          <div className="rounded-2xl flex items-center justify-center ">
+            <img src={logo} className="h-16 text-white" />
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-semibold text-slate-900">Gems Ore Admin</h1>
