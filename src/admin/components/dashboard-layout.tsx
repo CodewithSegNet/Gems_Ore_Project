@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Package, ShoppingCart, Star, Settings as SettingsIcon, LogOut, FolderTree, MessageSquare, Percent, FileText, Menu, X, Truck, Mail } from "lucide-react";
-import logo from "../../assets/logos.png";
+import logo from "../../assets/logoreview.png";
 import { cn } from "./ui/utils";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";

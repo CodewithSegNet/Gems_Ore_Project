@@ -6,7 +6,10 @@ import Footer from "../../components/footer";
 import storefrontApi from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
-
+import CheckCircle from "../../assets/CheckCircle.svg";
+import Truck from "../../assets/Truck.svg";
+import Package from "../../assets/Package.svg";
+import Clock1 from "../../assets/Clock1.svg";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -156,12 +159,12 @@ const TransactionHistory = () => {
                   let items = [];
                   try { items = typeof order.items_json === "string" ? JSON.parse(order.items_json) : order.items_json || []; } catch {}
                   const statusStyles = {
-                    pending: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", icon: "⏳" },
+                    pending: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", icon: Clock1 },
                     processing: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", icon: "⚙️" },
-                    confirmed: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", icon: "✅" },
-                    shipped: { bg: "bg-cyan-50", text: "text-cyan-700", border: "border-cyan-200", icon: "📦" },
-                    delivered: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", icon: "☑️" },
-                    completed: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", icon: "☑️" },
+                    confirmed: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", icon: Package },
+                    shipped: { bg: "bg-cyan-50", text: "text-cyan-700", border: "border-cyan-200", icon: Truck },
+                    delivered: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", icon: CheckCircle },
+                    completed: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", icon: "✅" },
                     cancelled: { bg: "bg-red-50", text: "text-red-600", border: "border-red-200", icon: "✕" },
                   };
                   const st = statusStyles[order.status] || statusStyles.pending;
@@ -173,7 +176,7 @@ const TransactionHistory = () => {
                           <div className="flex items-center gap-3 flex-wrap">
                             <h3 className="text-base font-bold text-[rgba(68,68,68,1)]">Order #{order.id?.slice(0, 8).toUpperCase()}</h3>
                             <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${st.bg} ${st.text} border ${st.border}`}>
-                              {st.icon} {order.status?.replace("_", " ")}
+                              {typeof st.icon === "string" ? st.icon : <img src={st.icon} alt="" style={{ width: "1em", height: "1em" }} />} {order.status?.replace("_", " ")}
                             </span>
                           </div>
                           <div className="text-right shrink-0">

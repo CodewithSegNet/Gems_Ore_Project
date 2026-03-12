@@ -12,6 +12,8 @@ import maleCol3 from "../assets/male_collection_3.png";
 import maleCol4 from "../assets/male_collection_4.png";
 import maleCol5 from "../assets/male_collection_5.png";
 import maleCol6 from "../assets/male_collection_6.png";
+import bracs from "../assets/bracs.avif";
+
 
 const womenPages = [
   [
@@ -22,7 +24,7 @@ const womenPages = [
   [
     { name: "Earrings", image: earringsImg, category: "earrings" },
     { name: "Bracelets", image: bracelet, category: "bracelets" },
-    { name: "Rings", image: rings, category: "rings" },
+    { name: "Anklets", image: bracs, category: "anklets" },
   ],
 ];
 

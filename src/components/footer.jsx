@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import storefrontApi from "../services/api";
 import callIcon from "../assets/call.png";
 import whatsappIcon from "../assets/whatsapp.png";
@@ -13,7 +14,12 @@ import twitterIcon from "../assets/twitter.png";
 import snapchat from "../assets/snapchat.png";
 
 const shopItems = ["Watches", "Rings", "Earrings", "Bracelets", "Necklaces", "Anklets"];
-const policyItems = ["Refund Policy", "Shipping Policy", "Terms of Service"];
+const policyItems = [
+  { label: "Refund Policy", to: "/refund-policy" },
+  { label: "Shipping Policy", to: "/shipping-policy" },
+  { label: "Terms of Service", to: "/terms" },
+  { label: "Privacy Policy", to: "/privacy-policy" },
+];
 const locationItems = ["Abuja (FCT)"];
 
 const contactItems = [
@@ -119,8 +125,10 @@ const Footer = () => {
           </div>
           <ul className="flex flex-col gap-2.5">
             {policyItems.map((item, i) => (
-              <li key={i} className="text-white/60 text-sm hover:text-[#958169] cursor-pointer transition-colors duration-300">
-                {item}
+              <li key={i}>
+                <Link to={item.to} className="text-white/60 text-sm hover:text-[#958169] cursor-pointer transition-colors duration-300">
+                  {item.label}
+                </Link>
               </li>
             ))}
           </ul>

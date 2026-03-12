@@ -10,10 +10,15 @@ import CartPage from "./pages/cartPage";
 import CryptoPaymentPage from "./pages/cryptoPaymentPage";
 import OrderSuccessPage from "./pages/orderSuccessPage";
 import TransactionHistory from "./pages/transactionHistoryPage";
+import ShippingPolicyPage from "./pages/shippingPolicyPage";
+import RefundPolicyPage from "./pages/refundPolicyPage";
+import TermsPage from "./pages/termsPage";
+import PrivacyPolicyPage from "./pages/privacyPolicyPage";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { CartProvider } from "./contexts/cartContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import ScrollToTop from "./components/ScrollToTop";
+import WhatsAppWidget from "./components/WhatsAppWidget";
 
 
 // Admin Dashboard - Lazy loaded
@@ -81,6 +86,7 @@ function App() {
       <CurrencyProvider>
       <CartProvider>
         <ScrollToTop />
+        <WhatsAppWidget />
         <Routes>
           {/* Customer-facing routes */}
           <Route path="/" element={<HomePage />} />
@@ -93,6 +99,10 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/crypto-payment/:orderId" element={<CryptoPaymentPage />} />
           <Route path="/order-success/:orderId" element={<OrderSuccessPage />} />
+          <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
+          <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
           {/* Admin Dashboard routes */}
           <Route

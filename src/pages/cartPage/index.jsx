@@ -9,6 +9,8 @@ import bar from "../../assets/Rectangle2.svg";
 import fast from "../../assets/fast.png";
 import shield from "../../assets/shield.svg";
 import { useCurrency } from "../../contexts/CurrencyContext";
+import darkcart from "../../assets/iconcart.png";
+
 
 const CartPage = () => {
   const { cartItems, cartCount, removeFromCart, updateQuantity, subtotal, discount, vat, total, appliedDiscount, setAppliedDiscount } = useCart();
@@ -109,7 +111,7 @@ const CartPage = () => {
             <>
             
                         <div className="flex flex-col items-center justify-center py-20 text-center">
-              <svg className="w-20 h-20 text-gray-200 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
+                                      <img className="w-8 h-8" src={darkcart} alt="" />
               <p className="text-xl font-semibold text-[rgba(68,68,68,1)] mb-2">Your Cart is Empty</p>
               <p className="text-sm text-gray-400 mb-6">Looks like you haven't added any items yet.</p>
               <Link to="/products" className="px-8 py-3.5 bg-[rgba(88,57,49,1)] text-white rounded-lg font-medium hover:bg-[rgba(68,47,39,1)] transition-colors duration-300">Continue Shopping</Link>

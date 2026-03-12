@@ -270,7 +270,7 @@ const Navbar = ({ dark = true }) => {
 
             {/* Search Dropdown — directly under icon */}
             {searchOpen && (
-              <div className="absolute right-0 top-[52px] w-[90vw] max-w-[360px] z-50 animate-slide-up bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="absolute right-[-10rem] top-[52px] w-[90vw] max-w-[360px] z-50 animate-slide-up bg-white rounded-xl shadow-lg overflow-hidden">
                 <div className="bg-[rgba(68,68,68,0.11)] mx-3 mt-3 rounded-lg px-4 py-3 flex items-center gap-3">
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="rgba(68,68,68,0.6)" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -394,7 +394,7 @@ const Navbar = ({ dark = true }) => {
             style={isLoggedIn ? { backgroundColor: userInitialColor } : undefined}
           >
             {isLoggedIn ? (
-              <span className="text-sm font-bold text-white">
+              <span className="text-2xl font-bold text-white">
                 {(user?.first_name || user?.email || "U").charAt(0).toUpperCase()}
               </span>
             ) : (
@@ -789,9 +789,7 @@ const Navbar = ({ dark = true }) => {
           <div className="px-6 py-4 flex-1 flex flex-col">
             {cartItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center flex-1 text-center">
-                <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="rgba(200,200,200,1)" strokeWidth="1">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                </svg>
+            <img className="w-8 h-8" src={darkcart} alt="" />
                 <p className="mt-2 text-lg font-medium text-[rgba(68,68,68,1)]">Your Cart is Empty</p>
                 <p className="text-sm text-gray-400 mt-1"></p>
 
@@ -1007,7 +1005,7 @@ const Navbar = ({ dark = true }) => {
                 style={{ ...(item.showInitial ? { backgroundColor: userInitialColor } : {}), transitionDelay: mobileMenuOpen ? `${200 + i * 100}ms` : '0ms' }}
               >
                 {item.showInitial ? (
-                  <span className="text-sm font-bold text-white">
+                  <span className="text-2xl font-bold text-white">
                     {(user?.first_name || user?.email || "U").charAt(0).toUpperCase()}
                   </span>
                 ) : (
