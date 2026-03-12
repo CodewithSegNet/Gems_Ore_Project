@@ -481,19 +481,24 @@ const Navbar = ({ dark = true }) => {
                             </button>
                 
                             <button
-                              onClick={() => {
+                              onClick={async () => {
                                 if (navigator.share) {
-                                  navigator.share({ title: productName, text: `Check out ${productName} on Gems Ore!`, url: shareUrl });
+                                  try {
+                                    await navigator.share({ title: productName, text: `Check out ${productName} on Gems Ore!`, url: shareUrl });
+                                  } catch (err) { /* user cancelled */ }
                                 } else {
-                                  navigator.clipboard.writeText(shareUrl);
-                                  alert("Link copied to clipboard!");
+                                  navigator.clipboard.writeText(shareUrl).then(() => {
+                                    const btn = document.getElementById(`share-copied-${fav.product_id}`);
+                                    if (btn) { btn.style.display = 'block'; setTimeout(() => { btn.style.display = 'none'; }, 2000); }
+                                  });
                                 }
                               }}
-                              className="w-9 h-9 rounded-full border bg-gray-300 border-gray-300 flex items-center justify-center hover:bg-primary transition-all duration-300 cursor-pointer shrink-0"
+                              className="relative w-9 h-9 rounded-full border bg-gray-300 border-gray-300 flex items-center justify-center hover:bg-primary transition-all duration-300 cursor-pointer shrink-0"
                             >
                               <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                               </svg>
+                              <span id={`share-copied-${fav.product_id}`} style={{display:'none'}} className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap">Copied!</span>
                             </button>
                           </div>
 </div>

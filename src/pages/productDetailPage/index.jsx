@@ -47,6 +47,7 @@ const ProductDetailPage = () => {
   const [selectedSize, setSelectedSize] = useState(sizes[0]);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [copied, setCopied] = useState(false);
   const favCtx = useFavorites();
   const [thumbStart, setThumbStart] = useState(0);
   const THUMBS_VISIBLE = 3;
@@ -472,19 +473,34 @@ const ProductDetailPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </button>
-                <button onClick={() => {
-                  const shareUrl = `${window.location.origin}/product/${product.id}`;
-                  if (navigator.share) {
-                    navigator.share({ title: product.name, text: `Check out ${product.name} on Gems Ore!`, url: shareUrl });
-                  } else {
-                    navigator.clipboard.writeText(shareUrl);
-                    alert("Link copied to clipboard!");
-                  }
-                }} className="w-9 h-9 md:w-11 md:h-11 rounded-full border bg-gray-200 border-gray-300 flex items-center justify-center hover:bg-primary transition-all duration-300 cursor-pointer bg-[rgba(255,255,255,0.1)]">
-                  <svg className="w-5 h-5 md:w-7 md:h-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                  </svg>
-                </button>
+                <div className="relative">
+                  <button onClick={async () => {
+                    const shareUrl = `${window.location.origin}/product/${product.id}`;
+                    if (navigator.share) {
+                      try {
+                        await navigator.share({ title: product.name, text: `Check out ${product.name} on Gems Ore!`, url: shareUrl });
+                      } catch (err) { /* user cancelled share */ }
+                    } else {
+                      navigator.clipboard.writeText(shareUrl).then(() => {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      });
+                    }
+                  }} className="w-9 h-9 md:w-11 md:h-11 rounded-full border bg-gray-200 border-gray-300 flex items-center justify-center hover:bg-primary transition-all duration-300 cursor-pointer bg-[rgba(255,255,255,0.1)]">
+                    {copied ? (
+                      <svg className="w-5 h-5 md:w-7 md:h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 md:w-7 md:h-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                    )}
+                  </button>
+                  {copied && (
+                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap">Copied!</span>
+                  )}
+                </div>
               </div>
 
               <button onClick={() => { if (!isAuthenticated) { navigate('/login'); return; } handleAddToCart(); navigate('/checkout'); }} className="w-full md:w-[360px] py-4 border border-black text-black hover:bg-primary hover:border-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-light transition-all duration-300 cursor-pointer">Buy Outright</button>

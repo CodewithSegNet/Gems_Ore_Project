@@ -192,7 +192,8 @@ export const adminApi = {
         method: "POST",
         body: formData,
       });
-      return `${API_BASE}${result.url}`;
+      // Cloudinary returns absolute URLs; local returns relative
+      return result.url.startsWith("http") ? result.url : `${API_BASE}${result.url}`;
     },
     images: async (files: File[]): Promise<string[]> => {
       const formData = new FormData();
@@ -201,7 +202,7 @@ export const adminApi = {
         method: "POST",
         body: formData,
       });
-      return result.urls.map((url) => `${API_BASE}${url}`);
+      return result.urls.map((url) => url.startsWith("http") ? url : `${API_BASE}${url}`);
     },
   },
 };
