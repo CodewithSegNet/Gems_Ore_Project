@@ -30,31 +30,48 @@ const LoginPage = () => {
   }, [googleLogin, navigate]);
 
   useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    const initGoogle = () => {
+      if (!window.google) return;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleResponse,
+      });
+      if (googleBtnRef.current) {
+        googleBtnRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: "outline", size: "large", width: googleBtnRef.current.offsetWidth, text: "signin_with",
+        });
+      }
+      if (googleBtnRef2.current) {
+        googleBtnRef2.current.innerHTML = '';
+        window.google.accounts.id.renderButton(googleBtnRef2.current, {
+          theme: "outline", size: "large", width: googleBtnRef2.current.offsetWidth, text: "signin_with",
+        });
+      }
+    };
+
+    // If script already loaded, just init
+    if (window.google?.accounts?.id) {
+      initGoogle();
+      return;
+    }
+
+    // Check if script tag already exists
+    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (existing) {
+      existing.addEventListener('load', initGoogle);
+      return;
+    }
+
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
-    script.onload = () => {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (window.google && clientId) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleResponse,
-        });
-        if (googleBtnRef.current) {
-          window.google.accounts.id.renderButton(googleBtnRef.current, {
-            theme: "outline", size: "large", width: googleBtnRef.current.offsetWidth, text: "signin_with",
-          });
-        }
-        if (googleBtnRef2.current) {
-          window.google.accounts.id.renderButton(googleBtnRef2.current, {
-            theme: "outline", size: "large", width: googleBtnRef2.current.offsetWidth, text: "signin_with",
-          });
-        }
-      }
-    };
+    script.onload = initGoogle;
     document.body.appendChild(script);
-    return () => { document.body.removeChild(script); };
   }, [handleGoogleResponse]);
 
   // OTP state

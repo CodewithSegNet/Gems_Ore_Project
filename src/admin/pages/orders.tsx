@@ -402,7 +402,7 @@ export function Orders() {
 
       {/* Cancellation Dialog */}
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-        <DialogContent className="border-0 shadow-xl">
+        <DialogContent className="border-0 shadow-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Cancel Order</DialogTitle>
             <DialogDescription>Please provide a reason for cancelling this order.</DialogDescription>
@@ -433,34 +433,35 @@ export function Orders() {
                 <p className="text-sm"><span className="font-semibold">Total:</span> {formatCurrency(orderToCancel.total)}</p>
               </div>
             )}
-            <div className="flex gap-2 justify-end pt-4">
-              <Button type="button" variant="outline" onClick={() => { setIsCancelDialogOpen(false); setOrderToCancel(null); setCancellationReason(''); setSelectedCancelReason(''); setIsFromPaymentRejection(false); }}>Cancel</Button>
-              <Button
-                onClick={async () => {
-                  if (!orderToCancel) return;
-                  const reason = selectedCancelReason === 'other' ? cancellationReason : selectedCancelReason;
-                  if (!reason || reason.trim() === '') { toast.error('Please provide a cancellation reason'); return; }
-                  setCancelSubmitting(true);
-                  try {
-                    await adminApi.orders.updateStatus(orderToCancel.id, 'cancelled', reason);
-                    await fetchOrders();
-                    setIsCancelDialogOpen(false);
-                    setCancelSuccessOpen(true);
-                  } catch (e: any) {
-                    toast.error(e.message || "Failed to cancel order");
-                  } finally {
-                    setCancelSubmitting(false);
-                    setOrderToCancel(null); setCancellationReason(''); setSelectedCancelReason(''); setIsFromPaymentRejection(false); setIsDetailOpen(false);
-                  }
-                }}
-                disabled={cancelSubmitting}
-                className="min-w-[160px] bg-amber-900 hover:bg-amber-800 text-white border-0"
-              >
-                {cancelSubmitting ? (
-                  <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin mr-2" />Submitting...</>
-                ) : 'Submit Cancellation'}
-              </Button>
-            </div>
+          </div>
+          {/* Submit section - always visible */}
+          <div className="flex flex-col gap-3 pt-4 border-t mt-4">
+            <Button
+              onClick={async () => {
+                if (!orderToCancel) return;
+                const reason = selectedCancelReason === 'other' ? cancellationReason : selectedCancelReason;
+                if (!reason || reason.trim() === '') { toast.error('Please provide a cancellation reason'); return; }
+                setCancelSubmitting(true);
+                try {
+                  await adminApi.orders.updateStatus(orderToCancel.id, 'cancelled', reason);
+                  await fetchOrders();
+                  setIsCancelDialogOpen(false);
+                  setCancelSuccessOpen(true);
+                } catch (e: any) {
+                  toast.error(e.message || "Failed to cancel order");
+                } finally {
+                  setCancelSubmitting(false);
+                  setOrderToCancel(null); setCancellationReason(''); setSelectedCancelReason(''); setIsFromPaymentRejection(false); setIsDetailOpen(false);
+                }
+              }}
+              disabled={cancelSubmitting}
+              className="w-full bg-amber-900 hover:bg-amber-800 text-white border-0"
+            >
+              {cancelSubmitting ? (
+                <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin mr-2" />Submitting...</>
+              ) : 'Submit Cancellation'}
+            </Button>
+            <Button type="button" variant="outline" className="w-full" onClick={() => { setIsCancelDialogOpen(false); setOrderToCancel(null); setCancellationReason(''); setSelectedCancelReason(''); setIsFromPaymentRejection(false); }}>Cancel</Button>
           </div>
         </DialogContent>
       </Dialog>
