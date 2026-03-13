@@ -36,12 +36,23 @@ const LoginPage = () => {
 
     const initGoogle = () => {
       if (!window.google) return;
-      if (!window._gsiInitialized) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleResponse,
+      // Reset flag so we re-initialize with correct callback
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleResponse,
+        use_fedcm_for_prompt: false,
+      });
+      if (googleBtnRef.current) {
+        googleBtnRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: "outline", size: "large", width: googleBtnRef.current.offsetWidth || 400, text: "signin_with",
         });
-        window._gsiInitialized = true;
+      }
+      if (googleBtnRef2.current) {
+        googleBtnRef2.current.innerHTML = '';
+        window.google.accounts.id.renderButton(googleBtnRef2.current, {
+          theme: "outline", size: "large", width: googleBtnRef2.current.offsetWidth || 400, text: "signin_with",
+        });
       }
       setGoogleReady(true);
     };
@@ -53,7 +64,8 @@ const LoginPage = () => {
 
     const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
     if (existing) {
-      existing.addEventListener('load', initGoogle);
+      if (window.google?.accounts?.id) { initGoogle(); }
+      else { existing.addEventListener('load', initGoogle); }
       return;
     }
 
@@ -212,27 +224,14 @@ const LoginPage = () => {
                 <div className="flex-1 h-px bg-gray-200"></div>
               </div>
 
-              {/* Google Button 1 — plain button, fully styleable */}
-              <button
-                type="button"
-                disabled={!googleReady}
-                onClick={() => {
-                  if (window.google?.accounts?.id) {
-                    window.google.accounts.id.prompt((notification) => {
-                      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                        // Fallback: open Google OAuth popup manually
-                        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-                        const redirectUri = window.location.origin;
-                        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=email+profile&prompt=select_account`;
-                      }
-                    });
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-3 py-4 border border-gray-200 bg-white rounded-md hover:bg-gray-50 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <GoogleIcon />
-                <span className="text-sm font-medium text-[rgba(68,68,68,1)]">Sign in with Google</span>
-              </button>
+              {/* Google Sign-In Button */}
+              <div className="relative w-full h-[52px]">
+                <div className="absolute inset-0 flex items-center justify-center gap-3 border border-gray-200 bg-white rounded-md pointer-events-none z-0">
+                  <GoogleIcon />
+                  <span className="text-sm font-medium text-[rgba(68,68,68,1)]">Sign in with Google</span>
+                </div>
+                <div ref={googleBtnRef} className="absolute inset-0 z-10 opacity-[0.01] cursor-pointer [&>div]:!w-full [&>div]:!h-full [&_iframe]:!w-full [&_iframe]:!h-full" />
+              </div>
 
               <p className="text-center text-sm text-gray-400 mt-6">
                 Don't have an account?{" "}
@@ -298,26 +297,14 @@ const LoginPage = () => {
                 <div className="flex-1 h-px bg-gray-200"></div>
               </div>
 
-              {/* Google Button 2 — plain button, fully styleable */}
-              <button
-                type="button"
-                disabled={!googleReady}
-                onClick={() => {
-                  if (window.google?.accounts?.id) {
-                    window.google.accounts.id.prompt((notification) => {
-                      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-                        const redirectUri = window.location.origin;
-                        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=email+profile&prompt=select_account`;
-                      }
-                    });
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-3 py-4 border border-gray-200 bg-white rounded-md hover:bg-gray-50 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <GoogleIcon />
-                <span className="text-sm font-medium text-[rgba(68,68,68,1)]">Sign in with Google</span>
-              </button>
+              {/* Google Sign-In Button */}
+              <div className="relative w-full h-[52px]">
+                <div className="absolute inset-0 flex items-center justify-center gap-3 border border-gray-200 bg-white rounded-md pointer-events-none z-0">
+                  <GoogleIcon />
+                  <span className="text-sm font-medium text-[rgba(68,68,68,1)]">Sign in with Google</span>
+                </div>
+                <div ref={googleBtnRef2} className="absolute inset-0 z-10 opacity-[0.01] cursor-pointer [&>div]:!w-full [&>div]:!h-full [&_iframe]:!w-full [&_iframe]:!h-full" />
+              </div>
 
               <div className="flex text-center justify-center pt-2">
                 <p className="text-center text-sm text-gray-400 mt-6">
