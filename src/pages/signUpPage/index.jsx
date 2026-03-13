@@ -30,31 +30,48 @@ const SignUpPage = () => {
   }, [googleLogin, navigate]);
 
   useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    const initGoogle = () => {
+      if (!window.google) return;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleResponse,
+        use_fedcm_for_prompt: false,
+      });
+      if (googleBtnRef.current) {
+        googleBtnRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: "outline", size: "large", width: googleBtnRef.current.offsetWidth || 400, text: "signup_with",
+        });
+      }
+      if (googleBtnRef2.current) {
+        googleBtnRef2.current.innerHTML = '';
+        window.google.accounts.id.renderButton(googleBtnRef2.current, {
+          theme: "outline", size: "large", width: googleBtnRef2.current.offsetWidth || 400, text: "signup_with",
+        });
+      }
+    };
+
+    if (window.google?.accounts?.id) {
+      initGoogle();
+      return;
+    }
+
+    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (existing) {
+      if (window.google?.accounts?.id) { initGoogle(); }
+      else { existing.addEventListener('load', initGoogle); }
+      return;
+    }
+
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
-    script.onload = () => {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (window.google && clientId) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleResponse,
-        });
-        if (googleBtnRef.current) {
-          window.google.accounts.id.renderButton(googleBtnRef.current, {
-            theme: "outline", size: "large", width: googleBtnRef.current.offsetWidth, text: "signup_with",
-          });
-        }
-        if (googleBtnRef2.current) {
-          window.google.accounts.id.renderButton(googleBtnRef2.current, {
-            theme: "outline", size: "large", width: googleBtnRef2.current.offsetWidth, text: "signup_with",
-          });
-        }
-      }
-    };
+    script.onload = initGoogle;
     document.body.appendChild(script);
-    return () => { document.body.removeChild(script); };
   }, [handleGoogleResponse]);
 
   const [loading, setLoading] = useState(false);
@@ -218,17 +235,13 @@ const SignUpPage = () => {
                 <div className="flex-1 h-px bg-gray-200"></div>
               </div>
 
-              {/* Google Button 1 — custom styled */}
-              <div className="relative w-full">
-                <div ref={googleBtnRef} className="absolute inset-0 opacity-0 overflow-hidden pointer-events-none" />
-                <button
-                  type="button"
-                  onClick={() => googleBtnRef.current?.querySelector("div[role=button]")?.click()}
-                  className="w-full flex items-center justify-center gap-3 py-4 border border-gray-200 bg-white rounded-md hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-                >
+              {/* Google Sign-Up Button */}
+              <div className="relative w-full h-[52px]">
+                <div className="absolute inset-0 flex items-center justify-center gap-3 border border-gray-200 bg-white rounded-md pointer-events-none z-0">
                   <GoogleIcon />
                   <span className="text-sm font-medium text-[rgba(68,68,68,1)]">Sign up with Google</span>
-                </button>
+                </div>
+                <div ref={googleBtnRef} className="absolute inset-0 z-10 opacity-[0.01] cursor-pointer [&>div]:!w-full [&>div]:!h-full [&_iframe]:!w-full [&_iframe]:!h-full" />
               </div>
 
               <p className="text-center text-sm text-gray-400 mt-6">
@@ -294,17 +307,13 @@ const SignUpPage = () => {
                 <div className="flex-1 h-px bg-gray-200"></div>
               </div>
 
-              {/* Google Button 2 — custom styled */}
-              <div className="relative w-full">
-                <div ref={googleBtnRef2} className="absolute inset-0 opacity-0 overflow-hidden pointer-events-none" />
-                <button
-                  type="button"
-                  onClick={() => googleBtnRef2.current?.querySelector("div[role=button]")?.click()}
-                  className="w-full flex items-center justify-center gap-3 py-4 border border-gray-200 bg-white rounded-md hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-                >
+              {/* Google Sign-Up Button */}
+              <div className="relative w-full h-[52px]">
+                <div className="absolute inset-0 flex items-center justify-center gap-3 border border-gray-200 bg-white rounded-md pointer-events-none z-0">
                   <GoogleIcon />
                   <span className="text-sm font-medium text-[rgba(68,68,68,1)]">Sign up with Google</span>
-                </button>
+                </div>
+                <div ref={googleBtnRef2} className="absolute inset-0 z-10 opacity-[0.01] cursor-pointer [&>div]:!w-full [&>div]:!h-full [&_iframe]:!w-full [&_iframe]:!h-full" />
               </div>
 
               <div className="flex text-center justify-center pt-2">
