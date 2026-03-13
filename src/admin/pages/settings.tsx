@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Switch } from "../components/ui/switch";
 import { Separator } from "../components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Bitcoin, Wallet, Settings2, Save, Copy, Check, DollarSign, CheckCircle2 } from "lucide-react";
+import { Bitcoin, Wallet, Settings2, Save, Copy, Check, DollarSign, CheckCircle2, Eye, EyeOff, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { getCurrentCurrency, formatCurrency, NGN_TO_USD_RATE, getExchangeRate } from "../utils/export-utils";
 import adminApi from "../utils/api";
@@ -37,6 +37,15 @@ export function Settings() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [lowStockAlerts, setLowStockAlerts] = useState(true);
   const [savingGeneral, setSavingGeneral] = useState(false);
+
+  // Change password state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -138,6 +147,7 @@ export function Settings() {
           <TabsTrigger value="vat">VAT Configuration</TabsTrigger>
           <TabsTrigger value="payment">Payment Methods</TabsTrigger>
           <TabsTrigger value="general">General Settings</TabsTrigger>
+          <TabsTrigger value="password">Update Password</TabsTrigger>
         </TabsList>
 
         {/* VAT Configuration */}
@@ -159,7 +169,13 @@ export function Settings() {
                 </div>
                 <Switch
                   checked={vatEnabled}
-                  onCheckedChange={setVatEnabled}
+                  onCheckedChange={async (checked) => {
+                    setVatEnabled(checked);
+                    try {
+                      await adminApi.settings.update({ vat_enabled: String(checked) });
+                      toast.success(`VAT ${checked ? 'enabled' : 'disabled'}`);
+                    } catch { toast.error('Failed to update VAT toggle'); }
+                  }}
                 />
               </div>
 
@@ -533,7 +549,13 @@ export function Settings() {
                       Receive email alerts for new orders
                     </p>
                   </div>
-                  <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
+                  <Switch checked={emailNotifications} onCheckedChange={async (checked) => {
+                    setEmailNotifications(checked);
+                    try {
+                      await adminApi.settings.update({ email_notifications: String(checked) });
+                      toast.success(`Email notifications ${checked ? 'enabled' : 'disabled'}`);
+                    } catch { toast.error('Failed to update email notification toggle'); }
+                  }} />
                 </div>
                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
                   <div className="space-y-0.5">
@@ -542,7 +564,13 @@ export function Settings() {
                       Get notified when products are low in stock
                     </p>
                   </div>
-                  <Switch checked={lowStockAlerts} onCheckedChange={setLowStockAlerts} />
+                  <Switch checked={lowStockAlerts} onCheckedChange={async (checked) => {
+                    setLowStockAlerts(checked);
+                    try {
+                      await adminApi.settings.update({ low_stock_alerts: String(checked) });
+                      toast.success(`Low stock alerts ${checked ? 'enabled' : 'disabled'}`);
+                    } catch { toast.error('Failed to update low stock alert toggle'); }
+                  }} />
                 </div>
               </div>
 
@@ -581,6 +609,95 @@ export function Settings() {
                   {savingGeneral ? 'Saving...' : 'Save General Settings'}
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Update Password Tab */}
+        <TabsContent value="password">
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-slate-600" />
+                <CardTitle>Update Password</CardTitle>
+              </div>
+              <CardDescription>Change your admin login password. You must enter your current password to confirm.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Current Password</Label>
+                <div className="relative mt-1.5">
+                  <Input
+                    type={showCurrentPw ? 'text' : 'password'}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    className="pr-10"
+                  />
+                  <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                    {showCurrentPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <Label>New Password</Label>
+                <div className="relative mt-1.5">
+                  <Input
+                    type={showNewPw ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password (min 6 characters)"
+                    className="pr-10"
+                  />
+                  <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                    {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <Label>Confirm New Password</Label>
+                <div className="relative mt-1.5">
+                  <Input
+                    type={showConfirmPw ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    className="pr-10"
+                  />
+                  <button type="button" onClick={() => setShowConfirmPw(!showConfirmPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                    {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <Button
+                disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
+                onClick={async () => {
+                  if (newPassword !== confirmPassword) {
+                    toast.error('New passwords do not match');
+                    return;
+                  }
+                  if (newPassword.length < 6) {
+                    toast.error('New password must be at least 6 characters');
+                    return;
+                  }
+                  setChangingPassword(true);
+                  try {
+                    await adminApi.auth.changePassword(currentPassword, newPassword);
+                    toast.success('Password changed successfully!');
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  } catch (e: any) {
+                    toast.error(e.message || 'Failed to change password');
+                  } finally {
+                    setChangingPassword(false);
+                  }
+                }}
+                className="bg-black text-white hover:bg-slate-800"
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                {changingPassword ? 'Changing...' : 'Change Password'}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

@@ -146,12 +146,39 @@ export function Products() {
     }
   };
 
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
+
   const handleImageUpload = async (file: File) => {
+    setImageUploading(true);
+    setImageUploadProgress(0);
     try {
-      const url = await adminApi.upload.image(file);
+      const formData = new FormData();
+      formData.append("file", file);
+      const apiBase = (window as any).__ADMIN_API_BASE || import.meta.env.VITE_API_BASE_URL || "http://localhost:7001";
+      const url: string = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${apiBase}/api/v1/upload/image`);
+        const token = localStorage.getItem("admin_access_token");
+        if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setImageUploadProgress(Math.round((e.loaded / e.total) * 100));
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const json = JSON.parse(xhr.responseText);
+            resolve(json.data?.url || json.url);
+          } else { reject(new Error("Upload failed")); }
+        };
+        xhr.onerror = () => reject(new Error("Upload failed"));
+        xhr.send(formData);
+      });
       setFormData((prev) => ({ ...prev, images: [...prev.images, url] }));
     } catch (e: any) {
       toast.error(e.message || "Failed to upload image");
+    } finally {
+      setImageUploading(false);
+      setImageUploadProgress(0);
     }
   };
 
@@ -210,14 +237,38 @@ export function Products() {
                       </div>
                     ))}
                     {formData.images.length < 4 && (
-                      <label htmlFor="image-upload" className="relative aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
-                        <Upload className="w-6 h-6 mb-1.5 text-slate-400" />
-                        <p className="text-xs text-slate-600 font-medium">Add Image</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{formData.images.length}/4</p>
+                      <label htmlFor="image-upload" className={`relative aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors ${imageUploading ? 'pointer-events-none opacity-60' : ''}`}>
+                        {imageUploading ? (
+                          <>
+                            <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-800 rounded-full animate-spin mb-1.5" />
+                            <p className="text-xs text-slate-600 font-medium">{imageUploadProgress}%</p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-6 h-6 mb-1.5 text-slate-400" />
+                            <p className="text-xs text-slate-600 font-medium">Add Image</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{formData.images.length}/4</p>
+                          </>
+                        )}
                         <Input id="image-upload" type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file); e.target.value = ""; }} />
                       </label>
                     )}
                   </div>
+                  {/* Upload Progress Bar */}
+                  {imageUploading && (
+                    <div>
+                      <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                        <span>Uploading image...</span>
+                        <span>{imageUploadProgress}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-slate-800 to-slate-600 rounded-full transition-all duration-300 ease-out"
+                          style={{ width: `${imageUploadProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                   {formData.images.length === 0 && <p className="text-xs text-slate-500 text-center py-2">Upload at least one product image</p>}
                 </div>
               </div>

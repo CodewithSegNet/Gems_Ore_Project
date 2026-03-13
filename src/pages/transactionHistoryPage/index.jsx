@@ -175,9 +175,7 @@ const TransactionHistory = () => {
                         <div className="flex items-start justify-between mb-1">
                           <div className="flex items-center gap-3 flex-wrap">
                             <h3 className="text-base font-bold text-[rgba(68,68,68,1)]">Order #{order.id?.slice(0, 8).toUpperCase()}</h3>
-                            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${st.bg} ${st.text} border ${st.border}`}>
-                              {typeof st.icon === "string" ? st.icon : <img src={st.icon} alt="" style={{ width: "1em", height: "1em" }} />} {order.status?.replace("_", " ")}
-                            </span>
+
                           </div>
                           <div className="text-right shrink-0">
                             <p className="text-[11px] text-gray-400">Total</p>

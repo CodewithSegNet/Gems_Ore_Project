@@ -20,6 +20,7 @@ const CryptoPaymentPage = () => {
   const [previewUrl, setPreviewUrl] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -69,16 +70,36 @@ const CryptoPaymentPage = () => {
   const handleSubmitUpload = async () => {
     if (!selectedFile) return;
     setUploading(true);
+    setUploadProgress(0);
     setError("");
     try {
-      const { url } = await storefrontApi.upload.image(selectedFile);
-      const fullUrl = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:7001"}${url}`;
+      // Upload image with progress tracking
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:7001";
+      const uploadUrl = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${apiBase}/api/v1/upload/image`);
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const json = JSON.parse(xhr.responseText);
+            resolve(json.data?.url || json.url);
+          } else { reject(new Error("Upload failed")); }
+        };
+        xhr.onerror = () => reject(new Error("Upload failed"));
+        xhr.send(formData);
+      });
+      const fullUrl = uploadUrl.startsWith("http") ? uploadUrl : `${apiBase}${uploadUrl}`;
       await storefrontApi.orders.uploadPaymentProof(orderId, fullUrl);
       setUploaded(true);
     } catch (err) {
       setError(err.message || "Upload failed");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -248,6 +269,21 @@ const CryptoPaymentPage = () => {
                         </button>
                       </div>
                     </div>
+                    {/* Upload Progress Bar */}
+                    {uploading && (
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                          <span>Uploading...</span>
+                          <span>{uploadProgress}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-[rgba(88,57,49,1)] to-[rgba(122,82,72,1)] rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

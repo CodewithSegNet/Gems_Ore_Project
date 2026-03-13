@@ -13,7 +13,7 @@ import darkcart from "../../assets/iconcart.png";
 
 
 const CartPage = () => {
-  const { cartItems, cartCount, removeFromCart, updateQuantity, subtotal, discount, vat, total, appliedDiscount, setAppliedDiscount } = useCart();
+  const { cartItems, cartCount, removeFromCart, updateQuantity, subtotal, discount, vat, vatPercent, total, appliedDiscount, setAppliedDiscount } = useCart();
   const { formatPrice } = useCurrency();
   const { user, isAuthenticated } = useAuth();
   const [couponCode, setCouponCode] = useState("");
@@ -293,7 +293,7 @@ const CartPage = () => {
 
                     {/* VAT */}
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">VAT (7.5%)</span>
+                      <span className="text-gray-500">VAT ({vatPercent}%)</span>
                       <span className="text-[rgba(68,68,68,1)]">{formatPrice(vat)}</span>
                     </div>
 

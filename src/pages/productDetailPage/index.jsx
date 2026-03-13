@@ -34,7 +34,7 @@ const sizes = ["4.5in", "5.0in"];
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, vatPercent: cartVatPercent } = useCart();
   const { user, isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState(null);
@@ -305,8 +305,9 @@ const ProductDetailPage = () => {
 
   const images = product.images?.length > 0 ? product.images : [product.image];
 
-  const vatRate = 0.075;
+
   const subtotal = product.price;
+  const vatRate = cartVatPercent / 100;
   const vat = subtotal * vatRate;
   const total = subtotal + vat;
 
@@ -458,7 +459,7 @@ const ProductDetailPage = () => {
 
 
               <div className="text-sm text-gray-500 py-2 mt-4 md:mt-[40px]">
-                SubTotal + VAT (7.5%): <span className="font-bold text-[rgba(68,68,68,1)]">{formatPrice(total)}</span>
+                SubTotal + VAT ({cartVatPercent}%): <span className="font-bold text-[rgba(68,68,68,1)]">{formatPrice(total)}</span>
               </div>
 
               <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-[40px] mb-4">
@@ -478,7 +479,7 @@ const ProductDetailPage = () => {
                     const shareUrl = `${window.location.origin}/product/${product.id}`;
                     if (navigator.share) {
                       try {
-                        await navigator.share({ title: product.name, text: `Check out ${product.name} on Gems Ore!`, url: shareUrl });
+                        await navigator.share({ title: product.name, url: shareUrl });
                       } catch (err) { /* user cancelled share */ }
                     } else {
                       navigator.clipboard.writeText(shareUrl).then(() => {

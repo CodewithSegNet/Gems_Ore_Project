@@ -54,6 +54,11 @@ export const adminApi = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+    changePassword: (current_password: string, new_password: string) =>
+      request<any>("/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({ current_password, new_password }),
+      }),
   },
 
   // Products

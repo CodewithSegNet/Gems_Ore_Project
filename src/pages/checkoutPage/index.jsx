@@ -17,7 +17,7 @@ const NIGERIAN_STATES = [
 
 
 
-const PAYSTACK_KEY = "pk_test_3c9322588fe7083852cbbee6a92aa29a9221bf5d";
+const PAYSTACK_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_3c9322588fe7083852cbbee6a92aa29a9221bf5d";
 
 function PaystackButton({ email, amount, onSuccess, onClose, disabled, total, onValidate, formatPrice }) {
   const config = {
@@ -53,7 +53,7 @@ function PaystackButton({ email, amount, onSuccess, onClose, disabled, total, on
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
-  const { cartItems, subtotal, discount, vat, total, clearCart, cartCount, appliedDiscount } = useCart();
+  const { cartItems, subtotal, discount, vat, vatPercent, total, clearCart, cartCount, appliedDiscount } = useCart();
   const { user, isAuthenticated } = useAuth();
   const { formatPrice } = useCurrency();
 
@@ -408,7 +408,7 @@ const CheckoutPage = () => {
                 <div className="border-t border-gray-100 mt-5 pt-5 space-y-3">
                   <div className="flex justify-between text-sm"><span className="text-gray-500">Subtotal</span><span className="font-medium text-[rgba(68,68,68,1)]">{formatPrice(subtotal)}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-gray-500">{appliedDiscount ? (appliedDiscount.name || 'Discount') : 'Discount'}</span><span className="text-green-600">{discount > 0 ? `−${formatPrice(discount)}` : 'None'}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-gray-500">VAT (7.5%)</span><span className="text-[rgba(68,68,68,1)]">{formatPrice(vat)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-gray-500">VAT ({vatPercent}%)</span><span className="text-[rgba(68,68,68,1)]">{formatPrice(vat)}</span></div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Shipping{shippingState ? ` (${shippingState})` : ""}</span>
                     {shippingLoading ? (

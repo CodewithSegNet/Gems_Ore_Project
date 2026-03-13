@@ -19,7 +19,7 @@ export const CurrencyProvider = ({ children }) => {
   useEffect(() => {
     const fetchRate = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:7001/api/v1"}/settings/public`);
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:7001"}/api/v1/settings/public`);
         const json = await res.json();
         const rate = json?.data?.ngn_to_usd_rate;
         if (rate && Number(rate) > 0) {

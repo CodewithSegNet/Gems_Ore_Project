@@ -54,6 +54,8 @@ export function Orders() {
   const [cancellationReason, setCancellationReason] = useState("");
   const [selectedCancelReason, setSelectedCancelReason] = useState("");
   const [isFromPaymentRejection, setIsFromPaymentRejection] = useState(false);
+  const [cancelSubmitting, setCancelSubmitting] = useState(false);
+  const [cancelSuccessOpen, setCancelSuccessOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -433,8 +435,46 @@ export function Orders() {
             )}
             <div className="flex gap-2 justify-end pt-4">
               <Button type="button" variant="outline" onClick={() => { setIsCancelDialogOpen(false); setOrderToCancel(null); setCancellationReason(''); setSelectedCancelReason(''); setIsFromPaymentRejection(false); }}>Cancel</Button>
-              <Button onClick={handleCancelOrder} variant="destructive">Confirm Cancellation</Button>
+              <Button
+                onClick={async () => {
+                  if (!orderToCancel) return;
+                  const reason = selectedCancelReason === 'other' ? cancellationReason : selectedCancelReason;
+                  if (!reason || reason.trim() === '') { toast.error('Please provide a cancellation reason'); return; }
+                  setCancelSubmitting(true);
+                  try {
+                    await adminApi.orders.updateStatus(orderToCancel.id, 'cancelled', reason);
+                    await fetchOrders();
+                    setIsCancelDialogOpen(false);
+                    setCancelSuccessOpen(true);
+                  } catch (e: any) {
+                    toast.error(e.message || "Failed to cancel order");
+                  } finally {
+                    setCancelSubmitting(false);
+                    setOrderToCancel(null); setCancellationReason(''); setSelectedCancelReason(''); setIsFromPaymentRejection(false); setIsDetailOpen(false);
+                  }
+                }}
+                disabled={cancelSubmitting}
+                className="min-w-[160px] bg-amber-900 hover:bg-amber-800 text-white border-0"
+              >
+                {cancelSubmitting ? (
+                  <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin mr-2" />Submitting...</>
+                ) : 'Submit Cancellation'}
+              </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancellation Success Modal */}
+      <Dialog open={cancelSuccessOpen} onOpenChange={setCancelSuccessOpen}>
+        <DialogContent className="max-w-sm border-0 shadow-xl text-center">
+          <div className="flex flex-col items-center py-4">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Order Cancelled</h3>
+            <p className="text-sm text-slate-500 mb-5">The order has been successfully cancelled and the customer has been notified.</p>
+            <Button onClick={() => setCancelSuccessOpen(false)} className="bg-black text-white hover:bg-slate-800 px-8">Done</Button>
           </div>
         </DialogContent>
       </Dialog>
