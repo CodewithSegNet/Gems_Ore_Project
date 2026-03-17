@@ -5,7 +5,8 @@ import { useGender } from "../contexts/genderContext";
 import { useFavorites } from "../contexts/FavoritesContext";
 import storefrontApi from "../services/api";
 import { useCurrency } from "../contexts/CurrencyContext";
-import MobileSwiper from "./MobileSwiper";
+
+const isVideoUrl = (url) => url && (/\.(mp4|webm|mov|avi)(\?|$)/i.test(url) || url.includes('/video/'));
 
 import icon2 from "../assets/icon2.png";
 import stock from "../assets/stock.png";
@@ -74,15 +75,6 @@ const NewestCollections = () => {
   const { gender } = useGender();
   const { isFavorited, toggleFavorite } = useFavorites();
   const { formatPrice, symbol } = useCurrency();
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
   // Fetch newest collection products from API
   useEffect(() => {
     const fetchNewest = async () => {
@@ -98,11 +90,13 @@ const NewestCollections = () => {
           id: p.id,
           name: p.name,
           price: p.price,
-          image: p.image || (p.images?.[0]?.image_url) || "",
+          image: (p.video_position === 0 && p.video_url) ? p.video_url : (p.image || (p.images?.[0]?.image_url) || p.video_url || ""),
+          video_url: p.video_url || null,
+          video_position: p.video_position,
           rating: 5.0,
           inStock: p.stock > 0,
           category: p.category_name?.toLowerCase() || "",
-          gender: p.gender === "male" ? "men" : "women",
+          gender: p.gender === "unisex" ? gender : (p.gender === "male" ? "men" : "women"),
         })));
       } catch (e) {
         console.error("Failed to fetch newest collections:", e);
@@ -353,86 +347,51 @@ const NewestCollections = () => {
           </div>
         </div>
 
-        {/* Product Grid / Mobile Swiper */}
-        {isMobile ? (
-          <MobileSwiper
-            items={visible}
-            autoPlay={0}
-            renderItem={(product, index) => {
-              return (
-                <Link
-                  to={`/product/${product.id}`}
-                  key={product.id}
-                  className="group rounded-lg overflow-hidden shadow-sm block no-underline"
-                >
-                  <div className="relative overflow-hidden" style={{ height: "380px" }}>
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
-                    <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
-                      className="flex items-center gap-2 absolute top-3 right-3 bg-transparent border border-white hover:bg-[rgba(88,57,49,1)] hover:text-white text-white text-xs font-light px-4 py-3 rounded-lg transition-all duration-300 cursor-pointer"
-                    >
-                      <img className="h-5 w-5" src={icon2} alt="" />
-                      Shop Now
-                    </button>
-                    <div className="absolute bottom-3 right-3">
-                      <HeartIcon filled={isFavorited(product.id)} onClick={() => toggleFavorite(product.id)} />
-                    </div>
-                    {!product.inStock && (
-                      <img src={stock} alt="Out of Stock" className="absolute top-0 left-3 w-[80px] h-auto" />
-                    )}
-                  </div>
-                  <div className="p-4 space-y-2">
-                    <p className="text-[rgba(68,68,68,1)] text-sm font-medium">{product.name}</p>
-                    <StarRating rating={product.rating} />
-                    <p className="text-[rgba(68,68,68,1)] text-base font-bold">{formatPrice(product.price)}</p>
-                  </div>
-                </Link>
-              );
-            }}
-          />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visible.map((product, index) => {
-              const isNewlyRevealed = newlyRevealed.has(index);
-              const staggerDelay = isNewlyRevealed ? (index % ITEMS_PER_PAGE) * 80 : 0;
+        {/* Product Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {visible.map((product, index) => {
+            const isNewlyRevealed = newlyRevealed.has(index);
+            const staggerDelay = isNewlyRevealed ? (index % ITEMS_PER_PAGE) * 80 : 0;
 
-              return (
-                <Link
-                  to={`/product/${product.id}`}
-                  key={product.id}
-                  className={`group rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-500 block no-underline ${
-                    isNewlyRevealed ? "animate-slide-up" : ""
-                  }`}
-                  style={isNewlyRevealed ? { animationDelay: `${staggerDelay}ms` } : {}}
-                >
-                  <div className="relative overflow-hidden" style={{ height: "380px" }}>
+            return (
+              <Link
+                to={`/product/${product.id}`}
+                key={product.id}
+                className={`group rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-500 block no-underline ${
+                  isNewlyRevealed ? "animate-slide-up" : ""
+                }`}
+                style={isNewlyRevealed ? { animationDelay: `${staggerDelay}ms` } : {}}
+              >
+                <div className="relative overflow-hidden" style={{ height: "380px" }}>
+                  {isVideoUrl(product.image) ? (
+                    <video src={product.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" autoPlay loop muted playsInline />
+                  ) : product.image ? (
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
-                    <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
-                      className="flex items-center gap-2 absolute top-3 right-3 bg-transparent border border-white hover:bg-[rgba(88,57,49,1)] hover:text-white text-white text-xs font-light px-4 py-3 rounded-lg transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
-                    >
-                      <img className="h-5 w-5" src={icon2} alt="" />
-                      Shop Now
-                    </button>
-                    <div className="absolute bottom-3 right-3">
-                      <HeartIcon filled={isFavorited(product.id)} onClick={() => toggleFavorite(product.id)} />
-                    </div>
-                    {!product.inStock && (
-                      <img src={stock} alt="Out of Stock" className="absolute top-0 left-3 w-[80px] h-auto" />
-                    )}
+                  ) : null}
+                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
+                    className="flex items-center gap-2 absolute top-3 right-3 bg-transparent border border-white hover:bg-[rgba(88,57,49,1)] hover:text-white text-white text-xs font-light px-4 py-3 rounded-lg transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    <img className="h-5 w-5" src={icon2} alt="" />
+                    Shop Now
+                  </button>
+                  <div className="absolute bottom-3 right-3">
+                    <HeartIcon filled={isFavorited(product.id)} onClick={() => toggleFavorite(product.id)} />
                   </div>
-                  <div className="p-4 space-y-2">
-                    <p className="text-[rgba(68,68,68,1)] text-sm md:text-xl font-medium">{product.name}</p>
-                    <StarRating rating={product.rating} />
-                    <p className="text-[rgba(68,68,68,1)] text-base font-bold">{formatPrice(product.price)}</p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+                  {!product.inStock && (
+                    <img src={stock} alt="Out of Stock" className="absolute top-0 left-3 w-[80px] h-auto" />
+                  )}
+                </div>
+                <div className="p-4 space-y-2">
+                  <p className="text-[rgba(68,68,68,1)] text-sm md:text-xl font-medium">{product.name}</p>
+                  <StarRating rating={product.rating} />
+                  <p className="text-[rgba(68,68,68,1)] text-base font-bold">{formatPrice(product.price)}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
 
         {/* Empty State */}
         {visible.length === 0 && (

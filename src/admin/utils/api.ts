@@ -59,6 +59,11 @@ export const adminApi = {
         method: "POST",
         body: JSON.stringify({ current_password, new_password }),
       }),
+    updateCredentials: (current_password: string, new_password?: string, new_email?: string) =>
+      request<any>("/auth/update-credentials", {
+        method: "POST",
+        body: JSON.stringify({ current_password, new_password: new_password || null, new_email: new_email || null }),
+      }),
   },
 
   // Products

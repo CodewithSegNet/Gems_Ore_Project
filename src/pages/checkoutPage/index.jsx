@@ -6,6 +6,8 @@ import storefrontApi from "../../services/api";
 import Navbar from "../../components/navbar";
 import { usePaystackPayment } from "react-paystack";
 import { useCurrency } from "../../contexts/CurrencyContext";
+import icon1 from "../../assets/iconcart.png";
+
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
@@ -127,7 +129,7 @@ const CheckoutPage = () => {
         quantity: item.quantity,
       }))
     ),
-    status: "pending",
+    status: "awaiting_payment",
     discount_code: appliedDiscount?.code || appliedDiscount?.name || null,
     discount_amount: Math.round(discount * 100) / 100,
     shipping_country: shippingCountry,
@@ -162,7 +164,7 @@ const CheckoutPage = () => {
     setLoading(true);
     try {
       const orderData = buildOrderData();
-      orderData.status = "pending";
+      orderData.status = "pending";  // Paystack payment is instant, so starts as pending
       orderData.payment_approved = true;
       const result = await storefrontApi.orders.create(orderData);
       // Record discount usage
@@ -178,25 +180,19 @@ const CheckoutPage = () => {
     }
   };
 
-  // Crypto submit
+  // Crypto submit — save order data locally; order is created only when payment proof is uploaded
   const handleCryptoSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    setLoading(true);
-    try {
-      const orderData = buildOrderData();
-      const result = await storefrontApi.orders.create(orderData);
-      // Record discount usage
-      if (appliedDiscount) {
-        storefrontApi.discounts.recordUse(appliedDiscount.id, appliedDiscount.code).catch(() => {});
-      }
-      clearCart();
-      navigate(`/crypto-payment/${result.id}?method=${paymentMethod}`);
-    } catch (err) {
-      setError(err.message || "Failed to place order.");
-    } finally {
-      setLoading(false);
+    const orderData = buildOrderData();
+    orderData.status = "pending";
+    // Save to localStorage for the crypto payment page to use
+    localStorage.setItem("gemsore_pending_crypto_order", JSON.stringify(orderData));
+    // Record discount usage
+    if (appliedDiscount) {
+      storefrontApi.discounts.recordUse(appliedDiscount.id, appliedDiscount.code).catch(() => {});
     }
+    navigate(`/crypto-payment/new?method=${paymentMethod}`);
   };
 
   // Empty cart
@@ -206,9 +202,7 @@ const CheckoutPage = () => {
         <Navbar dark={false} />
         <div className="min-h-screen bg-[#faf9f7] pt-32 pb-16 px-4">
           <div className="max-w-lg mx-auto text-center">
-            <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-            </svg>
+           <img className="flex mx-auto items-center justify-center" src={icon1} alt="" />
             <h2 className="text-xl font-bold text-[rgba(68,68,68,1)] mb-2">Your cart is empty</h2>
             <p className="text-gray-400 mb-6">Add items to your cart to proceed with checkout.</p>
             <Link to="/products" className="inline-block px-8 py-3 bg-[rgba(88,57,49,1)] text-white rounded-lg font-medium hover:bg-[rgba(68,47,39,1)] transition-colors">Browse Products</Link>
@@ -394,7 +388,11 @@ const CheckoutPage = () => {
                   {cartItems.map((item) => (
                     <div key={item.id} className="flex gap-3">
                       <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        {item.image && (/\.(mp4|webm|mov|avi)(\?|$)/i.test(item.image) || item.image.includes('/video/')) ? (
+                          <video src={item.image} className="w-full h-full object-cover" muted playsInline autoPlay loop />
+                        ) : (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-[rgba(68,68,68,1)] truncate">{item.name}</p>

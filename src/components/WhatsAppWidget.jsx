@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 const WhatsAppWidget = () => {
   const [hovered, setHovered] = useState(false);
-  const phoneNumber = "23480383828292";
+  const phoneNumber = "2348052842509";
   const message = "Hello! I'm interested in your jewelry collection.";
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 

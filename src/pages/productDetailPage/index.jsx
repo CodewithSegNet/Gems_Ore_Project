@@ -99,7 +99,7 @@ const ProductDetailPage = () => {
           id: data.id,
           name: data.name,
           price: data.price,
-          image: images[0] || "",
+          image: images[0] || data.video_url || "",
           images: images,
           rating: 8.0,
           inStock: data.stock > 0,
@@ -108,6 +108,8 @@ const ProductDetailPage = () => {
           category_id: data.category_id,
           gender: data.gender,
           description: data.description || "",
+          video_url: data.video_url || null,
+          video_position: data.video_position,
           is_best_seller: data.is_best_seller,
           is_new_collection: data.is_new_collection,
         });
@@ -199,7 +201,7 @@ const ProductDetailPage = () => {
   }, [purchaseCheckDone, isDelivered, hasExistingReview, product, id]);
 
   const handleThumbSwipeEnd = createTouchEnd(
-    () => setThumbStart((prev) => Math.min((product?.images?.length || 1) - THUMBS_VISIBLE, prev + 1)),
+    () => setThumbStart((prev) => Math.min(((product?.images?.length || 1) + (product?.video_url ? 1 : 0)) - THUMBS_VISIBLE, prev + 1)),
     () => setThumbStart((prev) => Math.max(0, prev - 1))
   );
 
@@ -304,6 +306,21 @@ const ProductDetailPage = () => {
   }
 
   const images = product.images?.length > 0 ? product.images : [product.image];
+  // Build media array with video inserted at its position
+  const media = (() => {
+    const imgs = [...images];
+    if (product.video_url) {
+      const pos = product.video_position ?? imgs.length;
+      imgs.splice(Math.min(pos, imgs.length), 0, product.video_url);
+    }
+    return imgs;
+  })();
+
+  const isVideo = (url) => {
+    if (!url) return false;
+    const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
+    return ['mp4', 'webm', 'mov', 'avi'].includes(ext) || url.includes('/video/');
+  };
 
 
   const subtotal = product.price;
@@ -396,22 +413,46 @@ const ProductDetailPage = () => {
             {/* Left — Images */}
             <div className="lg:w-1/2">
               <div className="rounded-lg overflow-hidden mb-4" style={{ height: "600px" }}>
-                <img src={images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
+                {isVideo(media[selectedImage]) ? (
+                  <video
+                    src={media[selectedImage]}
+                    className="w-full h-full object-cover bg-black cursor-pointer"
+                    controls
+                    autoPlay
+                    loop
+                    playsInline
+                    muted
+                  />
+                ) : (
+                  <img src={media[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
+                )}
               </div>
-              {images.length > 1 && (
+              {media.length > 1 && (
                 <div className="relative">
                   <div className="flex gap-3 overflow-hidden" onTouchStart={handleTouchStart} onTouchEnd={handleThumbSwipeEnd}>
-                    {images.slice(thumbStart, thumbStart + THUMBS_VISIBLE).map((img, i) => {
+                    {media.slice(thumbStart, thumbStart + THUMBS_VISIBLE).map((item, i) => {
                       const actualIndex = thumbStart + i;
+                      const itemIsVideo = isVideo(item);
                       return (
                         <button
                           key={actualIndex}
                           onClick={() => setSelectedImage(actualIndex)}
-                          className={`flex-1 h-[170px] rounded-lg overflow-hidden border-2 transition-all duration-200 cursor-pointer ${
+                          className={`flex-1 h-[170px] rounded-lg overflow-hidden border-2 transition-all duration-200 cursor-pointer relative ${
                             selectedImage === actualIndex ? "border-[rgba(217,176,62,1)]" : "border-transparent"
                           }`}
                         >
-                          <img src={img} alt="" className="w-full h-full object-cover" />
+                          {itemIsVideo ? (
+                            <>
+                              <video src={item} className="w-full h-full object-cover" muted preload="metadata" />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#333" className="ml-0.5"><path d="M8 5v14l11-7z" /></svg>
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <img src={item} alt="" className="w-full h-full object-cover" />
+                          )}
                         </button>
                       );
                     })}
@@ -421,8 +462,8 @@ const ProductDetailPage = () => {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                     </button>
                   )}
-                  {thumbStart < images.length - THUMBS_VISIBLE && (
-                    <button onClick={() => setThumbStart(Math.min(images.length - THUMBS_VISIBLE, thumbStart + 1))} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-md hover:bg-white transition-all duration-200 cursor-pointer">
+                  {thumbStart < media.length - THUMBS_VISIBLE && (
+                    <button onClick={() => setThumbStart(Math.min(media.length - THUMBS_VISIBLE, thumbStart + 1))} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-md hover:bg-white transition-all duration-200 cursor-pointer">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                     </button>
                   )}

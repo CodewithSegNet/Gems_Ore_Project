@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../contexts/cartContext";
 import { useGender } from "../contexts/genderContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -99,8 +99,9 @@ const Navbar = ({ dark = true }) => {
   const searchRef = useRef(null);
   const mobileSearchRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const { cartItems, addToCart, cartCount, removeFromCart, updateQuantity, subtotal, discount, vat, total, appliedDiscount } = useCart();
+  const { cartItems, addToCart, cartCount, removeFromCart, updateQuantity, subtotal, discount, vat, vatPercent, total, appliedDiscount } = useCart();
   const { gender, setGender } = useGender();
   const { user, isAuthenticated, logout } = useAuth();
   const { favoriteItems, toggleFavorite, clearAllFavorites, fetchFavorites, loading: favoritesLoading, favoritesCount } = useFavorites();
@@ -246,6 +247,7 @@ const Navbar = ({ dark = true }) => {
           <img className="text-xl font-bold w-[55px] cursor-pointer h-[50px] lg:w-[85px] lg:h-[80px]" src={logo} alt="Gems Ore - Premium Jewelry Store Nigeria" />
         </Link>
 
+        {location.pathname === "/" && (
         <ul className={`flex lg:ml-[8.5rem] items-center justify-center gap-4 md:gap-6 rounded-md md:rounded-lg duration-75 transition-underline py-1 px-2 md:py-1.5 md:px-4 ${iconBg}`}>
           
                    <li onClick={() => setGender("women")} className={`cursor-pointer mb-1.5 lg:mb-0 duration-300 ${gender === "women" ? "underline underline-offset-4" : "hover:underline"}`}>
@@ -256,6 +258,7 @@ const Navbar = ({ dark = true }) => {
           </li>
  
         </ul>
+        )}
 
         {/* Desktop Nav Icons */}
         <ul className="hidden lg:flex gap-6">
@@ -447,7 +450,9 @@ const Navbar = ({ dark = true }) => {
                   <button onClick={() => clearAllFavorites()} className="text-xs text-red-400 hover:text-red-600 transition-colors cursor-pointer underline">Clear All</button>
                 </div>
                 {favoriteItems.map((fav) => {
-                  const productImage = fav.product?.image || fav.product?.images?.[0]?.image_url || "";
+                  const productImage = fav.product?.image || fav.product?.images?.[0]?.image_url || fav.product?.video_url || "";
+                  const productVideoUrl = fav.product?.video_url || null;
+                  const isVideoSrc = (url) => url && (/\.(mp4|webm|mov|avi)(\?|$)/i.test(url) || url.includes('/video/'));
                   const productName = fav.product?.name || "Product";
                   const productPrice = fav.product?.price || 0;
                   const shareUrl = `${window.location.origin}/product/${fav.product_id}`;
@@ -456,7 +461,11 @@ const Navbar = ({ dark = true }) => {
                     <div key={fav.id} className="flex flex-col gap-4 pb-5 border-b border-gray-100">
                       <div className="flex gap-4">
                       <Link to={`/product/${fav.product_id}`} onClick={() => setWishlistOpen(false)} className="w-[50px] h-[90px] lg:w-[180px] lg:h-[120px] rounded-lg overflow-hidden shrink-0">
-                        <img src={productImage} alt={productName} className="w-full h-full object-cover" />
+                        {isVideoSrc(productImage) ? (
+                          <video src={productImage} className="w-full h-full object-cover" muted playsInline autoPlay loop />
+                        ) : (
+                          <img src={productImage} alt={productName} className="w-full h-full object-cover" />
+                        )}
                       </Link>
                       <div className="flex-1 min-w-0">
                         <Link to={`/product/${fav.product_id}`} onClick={() => setWishlistOpen(false)} className="text-sm font-medium text-[rgba(68,68,68,1)] truncate block no-underline hover:text-[rgba(88,57,49,1)] transition-colors">
@@ -704,6 +713,7 @@ const Navbar = ({ dark = true }) => {
                               {expandedOrder === order.id && (
                                 <OrderTimeline order={order} />
                               )}
+
                             </div>
                           );
                         })}
@@ -815,7 +825,11 @@ const Navbar = ({ dark = true }) => {
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex gap-4 pb-5 border-b border-gray-100">
                     <div className="w-[100px] h-[100px] rounded-lg overflow-hidden shrink-0">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      {item.image && (/\.(mp4|webm|mov|avi)(\?|$)/i.test(item.image) || item.image.includes('/video/')) ? (
+                        <video src={item.image} className="w-full h-full object-cover" muted playsInline autoPlay loop />
+                      ) : (
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[rgba(68,68,68,1)] truncate">{item.name}</p>
@@ -851,7 +865,7 @@ const Navbar = ({ dark = true }) => {
                   <span className="font-bold text-[rgba(68,68,68,1)]">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">VAT (7.5%)</span>
+                  <span className="text-gray-500">VAT ({vatPercent}%)</span>
                   <span className="text-[rgba(68,68,68,1)]">{formatPrice(vat)}</span>
                 </div>
                 <div className="flex justify-between text-sm">

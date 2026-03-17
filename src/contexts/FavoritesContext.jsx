@@ -69,6 +69,7 @@ export const FavoritesProvider = ({ children }) => {
                   name: p.name,
                   price: p.price,
                   image: p.image || p.images?.[0]?.image_url || "",
+                  video_url: p.video_url || null,
                   images: p.images,
                 },
               };

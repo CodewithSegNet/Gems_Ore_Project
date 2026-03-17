@@ -28,18 +28,35 @@ export const CartProvider = ({ children }) => {
   }, [appliedDiscount]);
 
   // Fetch VAT settings from backend
+  const fetchVAT = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:7001"}/api/v1/settings/public`);
+      const json = await res.json();
+      const data = json?.data;
+      if (data) {
+        if (data.vat_enabled !== undefined) setVatEnabled(data.vat_enabled === 'true' || data.vat_enabled === true);
+        if (data.vat_rate && Number(data.vat_rate) >= 0) setVatRate(Number(data.vat_rate) / 100);
+      }
+    } catch {}
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:7001"}/api/v1/settings/public`);
-        const json = await res.json();
-        const data = json?.data;
-        if (data) {
-          if (data.vat_enabled !== undefined) setVatEnabled(data.vat_enabled === 'true' || data.vat_enabled === true);
-          if (data.vat_rate && Number(data.vat_rate) >= 0) setVatRate(Number(data.vat_rate) / 100);
-        }
-      } catch {}
-    })();
+    fetchVAT();
+
+    // Re-fetch when admin changes VAT settings
+    const handleVatChange = () => fetchVAT();
+    window.addEventListener('gemsore_vat_change', handleVatChange);
+
+    // Re-fetch when tab regains focus (covers admin changing in another tab)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchVAT();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('gemsore_vat_change', handleVatChange);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   const addToCart = (product, quantity = 1) => {

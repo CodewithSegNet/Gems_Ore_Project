@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Switch } from "../components/ui/switch";
 import { Separator } from "../components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Bitcoin, Wallet, Settings2, Save, Copy, Check, DollarSign, CheckCircle2, Eye, EyeOff, Lock } from "lucide-react";
+import { Bitcoin, Wallet, Settings2, Save, Copy, Check, DollarSign, CheckCircle2, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { getCurrentCurrency, formatCurrency, NGN_TO_USD_RATE, getExchangeRate } from "../utils/export-utils";
 import adminApi from "../utils/api";
@@ -38,16 +38,19 @@ export function Settings() {
   const [lowStockAlerts, setLowStockAlerts] = useState(true);
   const [savingGeneral, setSavingGeneral] = useState(false);
 
-  // Change password state
+  // Change credentials state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
+  const [updatingCredentials, setUpdatingCredentials] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Load settings from backend on mount
   useEffect(() => {
@@ -91,6 +94,8 @@ export function Settings() {
         vat_rate: vatRate,
         vat_number: vatNumber,
       });
+      // Notify storefront tabs to refetch VAT settings
+      window.dispatchEvent(new Event('gemsore_vat_change'));
       showSaveSuccess("VAT configuration has been saved successfully.");
     } catch {
       toast.error("Failed to save VAT configuration");
@@ -147,7 +152,7 @@ export function Settings() {
           <TabsTrigger value="vat">VAT Configuration</TabsTrigger>
           <TabsTrigger value="payment">Payment Methods</TabsTrigger>
           <TabsTrigger value="general">General Settings</TabsTrigger>
-          <TabsTrigger value="password">Update Password</TabsTrigger>
+          <TabsTrigger value="password">Update Admin Credentials</TabsTrigger>
         </TabsList>
 
         {/* VAT Configuration */}
@@ -613,19 +618,34 @@ export function Settings() {
           </Card>
         </TabsContent>
 
-        {/* Update Password Tab */}
+        {/* Update Admin Credentials Tab */}
         <TabsContent value="password">
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm bg-white rounded-xl">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Lock className="h-5 w-5 text-slate-600" />
-                <CardTitle>Update Password</CardTitle>
+                <CardTitle>Update Admin Credentials</CardTitle>
               </div>
-              <CardDescription>Change your admin login password. You must enter your current password to confirm.</CardDescription>
+              <CardDescription>Change your admin login email and/or password. You must enter your current password to confirm any changes.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* New Email */}
               <div>
-                <Label>Current Password</Label>
+                <Label className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> New Login Email (optional)</Label>
+                <Input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="Enter new admin email"
+                  className="mt-1.5"
+                />
+                <p className="text-xs text-slate-500 mt-1">Leave blank to keep your current email unchanged.</p>
+              </div>
+
+              <Separator className="bg-slate-100" />
+
+              <div>
+                <Label>Current Password <span className="text-red-500">*</span></Label>
                 <div className="relative mt-1.5">
                   <Input
                     type={showCurrentPw ? 'text' : 'password'}
@@ -640,7 +660,7 @@ export function Settings() {
                 </div>
               </div>
               <div>
-                <Label>New Password</Label>
+                <Label>New Password (optional)</Label>
                 <div className="relative mt-1.5">
                   <Input
                     type={showNewPw ? 'text' : 'password'}
@@ -653,6 +673,7 @@ export function Settings() {
                     {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <p className="text-xs text-slate-500 mt-1">Leave blank to keep your current password unchanged.</p>
               </div>
               <div>
                 <Label>Confirm New Password</Label>
@@ -670,33 +691,68 @@ export function Settings() {
                 </div>
               </div>
               <Button
-                disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
+                disabled={updatingCredentials || !currentPassword || (!newEmail.trim() && !newPassword)}
                 onClick={async () => {
-                  if (newPassword !== confirmPassword) {
+                  if (newPassword && newPassword !== confirmPassword) {
                     toast.error('New passwords do not match');
                     return;
                   }
-                  if (newPassword.length < 6) {
+                  if (newPassword && newPassword.length < 6) {
                     toast.error('New password must be at least 6 characters');
                     return;
                   }
-                  setChangingPassword(true);
+                  if (!newEmail.trim() && !newPassword) {
+                    toast.error('Please provide a new email or password to update');
+                    return;
+                  }
+                  setUpdatingCredentials(true);
                   try {
-                    await adminApi.auth.changePassword(currentPassword, newPassword);
-                    toast.success('Password changed successfully!');
+                    const result = await adminApi.auth.updateCredentials(
+                      currentPassword,
+                      newPassword || undefined,
+                      newEmail.trim() || undefined
+                    );
+
+                    // Save new JWT token so session stays valid
+                    if (result?.access_token) {
+                      localStorage.setItem('admin_access_token', result.access_token);
+                    }
+
+                    // Update stored admin user info
+                    if (result?.email) {
+                      const stored = localStorage.getItem('admin_user');
+                      if (stored) {
+                        try {
+                          const userData = JSON.parse(stored);
+                          userData.email = result.email;
+                          localStorage.setItem('admin_user', JSON.stringify(userData));
+                        } catch {}
+                      }
+                    }
+
+                    // Clear form
                     setCurrentPassword('');
                     setNewPassword('');
                     setConfirmPassword('');
+                    setNewEmail('');
+
+                    // Build descriptive success message
+                    const parts: string[] = [];
+                    if (result?.changes?.includes('email')) parts.push(`Email updated to ${result.email}`);
+                    if (result?.changes?.includes('password')) parts.push('Password updated');
+                    showSaveSuccess(parts.length > 0 ? parts.join('. ') + '. You can now use the new credentials to log in.' : 'Credentials updated successfully.');
                   } catch (e: any) {
-                    toast.error(e.message || 'Failed to change password');
+                    setSuccessMessage('');
+                    setShowErrorModal(true);
+                    setErrorMessage(e.message || 'Failed to update credentials');
                   } finally {
-                    setChangingPassword(false);
+                    setUpdatingCredentials(false);
                   }
                 }}
                 className="bg-black text-white hover:bg-slate-800"
               >
                 <Lock className="h-4 w-4 mr-2" />
-                {changingPassword ? 'Changing...' : 'Change Password'}
+                {updatingCredentials ? 'Updating...' : 'Update Credentials'}
               </Button>
             </CardContent>
           </Card>
@@ -717,6 +773,27 @@ export function Settings() {
               className="bg-black text-white hover:bg-slate-800 px-8"
             >
               Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error Modal */}
+      <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
+        <DialogContent className="max-w-sm text-center">
+          <div className="flex flex-col items-center py-4">
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+              <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Update Failed</h3>
+            <p className="text-sm text-slate-500 mb-5">{errorMessage}</p>
+            <Button
+              onClick={() => setShowErrorModal(false)}
+              className="bg-black text-white hover:bg-slate-800 px-8"
+            >
+              Try Again
             </Button>
           </div>
         </DialogContent>

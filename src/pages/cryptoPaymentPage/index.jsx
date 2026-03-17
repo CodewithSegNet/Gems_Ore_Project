@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams, useNavigate } from "react-router-dom";
 import storefrontApi from "../../services/api";
 import Navbar from "../../components/navbar";
 import { useCurrency } from "../../contexts/CurrencyContext";
+import { useCart } from "../../contexts/cartContext";
+import { QRCodeSVG } from "qrcode.react";
 
 
 
 const CryptoPaymentPage = () => {
   const { orderId } = useParams();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const method = searchParams.get("method") || "BTC";
   const { formatPrice } = useCurrency();
+  const { clearCart } = useCart();
 
   const [order, setOrder] = useState(null);
   const [wallets, setWallets] = useState({});
@@ -21,21 +25,94 @@ const CryptoPaymentPage = () => {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedNetwork, setSelectedNetwork] = useState("erc20"); // erc20, bep20, trc20
+
+  // Crypto price state
+  const [cryptoPrice, setCryptoPrice] = useState(null);
+  const [cryptoLoading, setCryptoLoading] = useState(true);
+
+  const isNewOrder = orderId === "new";
 
   useEffect(() => {
     (async () => {
       try {
-        const [orderData, settingsData] = await Promise.all([
-          storefrontApi.orders.getById(orderId),
-          storefrontApi.settings.getPublic(),
-        ]);
-        setOrder(orderData);
-        setWallets(settingsData);
+        if (isNewOrder) {
+          // Read pending order data from localStorage (order not yet created in backend)
+          const saved = localStorage.getItem("gemsore_pending_crypto_order");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            setOrder({ ...parsed, id: null });
+          } else {
+            setError("No pending order found. Please go back to checkout.");
+            return;
+          }
+          const settingsData = await storefrontApi.settings.getPublic();
+          setWallets(settingsData);
+        } else {
+          // Existing order — fetch from backend
+          const [orderData, settingsData] = await Promise.all([
+            storefrontApi.orders.getById(orderId),
+            storefrontApi.settings.getPublic(),
+          ]);
+          setOrder(orderData);
+          setWallets(settingsData);
+        }
       } catch (err) {
         setError("Failed to load order details.");
       }
     })();
-  }, [orderId]);
+  }, [orderId, isNewOrder]);
+
+  // Set crypto price from admin settings
+  useEffect(() => {
+    if (!wallets || Object.keys(wallets).length === 0) return;
+
+    const adminRate = parseFloat(wallets.ngn_to_usd_rate);
+
+    if (method === "USDT") {
+      // USDT: use admin exchange rate directly (1 USDT ≈ 1 USD)
+      if (adminRate && adminRate > 0) {
+        setCryptoPrice(adminRate);
+        setCryptoLoading(false);
+      } else {
+        setCryptoPrice(null);
+        setCryptoLoading(false);
+      }
+    } else {
+      // BTC: convert NGN → USD using admin rate, then USD → BTC using live BTC/USD price
+      if (!adminRate || adminRate <= 0) {
+        setCryptoPrice(null);
+        setCryptoLoading(false);
+        return;
+      }
+      (async () => {
+        setCryptoLoading(true);
+        try {
+          const res = await fetch(
+            `https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd`
+          );
+          const data = await res.json();
+          const btcUsdPrice = data.bitcoin?.usd;
+          if (btcUsdPrice) {
+            // 1 BTC = btcUsdPrice USD, and 1 USD = adminRate NGN
+            // So 1 BTC = btcUsdPrice * adminRate NGN
+            setCryptoPrice(btcUsdPrice * adminRate);
+          }
+        } catch (err) {
+          console.error("Failed to fetch BTC price:", err);
+        } finally {
+          setCryptoLoading(false);
+        }
+      })();
+    }
+  }, [method, wallets]);
+
+  const getCryptoEquivalent = () => {
+    if (!order || !cryptoPrice) return null;
+    return (order.total / cryptoPrice).toFixed(method === "BTC" ? 8 : 2);
+  };
+
+  const getCryptoSymbol = () => (method === "BTC" ? "BTC" : "USDT");
 
   const getWalletAddress = () => {
     if (method === "BTC") return wallets.btc_address || "";
@@ -93,8 +170,22 @@ const CryptoPaymentPage = () => {
         xhr.send(formData);
       });
       const fullUrl = uploadUrl.startsWith("http") ? uploadUrl : `${apiBase}${uploadUrl}`;
-      await storefrontApi.orders.uploadPaymentProof(orderId, fullUrl);
+
+      if (isNewOrder) {
+        // Create the order in the backend now, with payment proof
+        const saved = localStorage.getItem("gemsore_pending_crypto_order");
+        if (!saved) throw new Error("Order data not found");
+        const orderData = JSON.parse(saved);
+        orderData.payment_proof = fullUrl;
+        const result = await storefrontApi.orders.create(orderData);
+        setOrder({ ...order, id: result.id });
+        localStorage.removeItem("gemsore_pending_crypto_order");
+      } else {
+        // Existing order — just attach proof
+        await storefrontApi.orders.uploadPaymentProof(orderId, fullUrl);
+      }
       setUploaded(true);
+      clearCart();
     } catch (err) {
       setError(err.message || "Upload failed");
     } finally {
@@ -120,6 +211,17 @@ const CryptoPaymentPage = () => {
       <Navbar dark={false} />
       <div className="min-h-screen bg-[#faf9f7] pt-28 md:pt-32 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-[rgba(88,57,49,1)] hover:text-[rgba(68,68,68,1)] transition-colors duration-200 group mb-6"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform duration-200 group-hover:-translate-x-1">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5m0 0l7 7m-7-7l7-7" />
+            </svg>
+            <span className="text-sm font-medium">Back to Payment</span>
+          </button>
+
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4">
@@ -133,7 +235,7 @@ const CryptoPaymentPage = () => {
               {uploaded ? "Receipt Uploaded!" : `Complete Your ${getWalletLabel()} Payment`}
             </h1>
             <p className="text-sm text-gray-400 mt-2">
-              Order ID: <span className="font-mono text-[rgba(88,57,49,1)]">{orderId?.slice(0, 12)}...</span>
+              Order ID: <span className="font-mono text-[rgba(88,57,49,1)]">{isNewOrder ? "New Order" : `${orderId?.slice(0, 12)}...`}</span>
             </p>
           </div>
 
@@ -159,7 +261,127 @@ const CryptoPaymentPage = () => {
                 <div className="bg-white rounded-2xl p-6 shadow-sm text-center">
                   <p className="text-sm text-gray-500 mb-1">Amount to Pay</p>
                   <p className="text-3xl font-bold text-[rgba(88,57,49,1)]">{formatPrice(order.total)}</p>
-                  <p className="text-xs text-gray-400 mt-2">Send the {method} equivalent of this amount</p>
+                  {/* Crypto Equivalent */}
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    {cryptoLoading ? (
+                      <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                        <span className="w-3.5 h-3.5 border-2 border-gray-300 border-t-[rgba(88,57,49,1)] rounded-full animate-spin" />
+                        Fetching {getCryptoSymbol()} rate...
+                      </div>
+                    ) : cryptoPrice ? (
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">{getCryptoSymbol()} Equivalent</p>
+                        <p className="text-xl font-bold text-[rgba(68,68,68,1)]">
+                          ≈ {getCryptoEquivalent()} {getCryptoSymbol()}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          1 {getCryptoSymbol()} ≈ ₦{cryptoPrice.toLocaleString()}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400">Send the {getCryptoSymbol()} equivalent of this amount</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* QR Code */}
+              {method === "BTC" && getWalletAddress() && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm text-center">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">
+                    Scan to Pay
+                  </h3>
+                  <div className="inline-block p-4 bg-white border-2 border-gray-100 rounded-2xl">
+                    <QRCodeSVG
+                      value={`bitcoin:${getWalletAddress()}`}
+                      size={200}
+                      level="H"
+                      includeMargin={false}
+                      bgColor="#ffffff"
+                      fgColor="#1a1a1a"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-3">
+                    Scan this QR code with your Bitcoin wallet app
+                  </p>
+                </div>
+              )}
+
+              {/* USDT QR Code with Network Selector */}
+              {method === "USDT" && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4 text-center">
+                    Scan to Pay
+                  </h3>
+
+                  {/* Network selector buttons */}
+                  <div className="grid grid-cols-3 gap-2 mb-5">
+                    {[
+                      { id: "erc20", label: "ERC-20", sub: "Ethereum", addr: wallets.usdt_erc20 },
+                      { id: "bep20", label: "BEP-20", sub: "BSC", addr: wallets.usdt_bep20 },
+                      { id: "trc20", label: "TRC-20", sub: "Tron", addr: wallets.usdt_trc20 },
+                    ].filter(n => n.addr).map((net) => (
+                      <button
+                        key={net.id}
+                        onClick={() => setSelectedNetwork(net.id)}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 text-center cursor-pointer ${
+                          selectedNetwork === net.id
+                            ? "border-[rgba(88,57,49,1)] bg-[rgba(88,57,49,0.05)]"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <p className={`text-sm font-semibold ${
+                          selectedNetwork === net.id ? "text-[rgba(88,57,49,1)]" : "text-[rgba(68,68,68,1)]"
+                        }`}>{net.label}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">{net.sub}</p>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* QR Code for selected network */}
+                  {(() => {
+                    const networkAddresses = {
+                      erc20: wallets.usdt_erc20,
+                      bep20: wallets.usdt_bep20,
+                      trc20: wallets.usdt_trc20,
+                    };
+                    const addr = networkAddresses[selectedNetwork];
+                    if (!addr) return null;
+
+                    const networkLabels = {
+                      erc20: "ERC-20 (Ethereum)",
+                      bep20: "BEP-20 (BSC)",
+                      trc20: "TRC-20 (Tron)",
+                    };
+
+                    return (
+                      <div className="text-center">
+                        <div className="inline-block p-4 bg-white border-2 border-gray-100 rounded-2xl transition-all duration-300">
+                          <QRCodeSVG
+                            value={addr}
+                            size={200}
+                            level="H"
+                            includeMargin={false}
+                            bgColor="#ffffff"
+                            fgColor="#1a1a1a"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-3">
+                          Scan with your USDT wallet — <span className="font-semibold text-[rgba(88,57,49,1)]">{networkLabels[selectedNetwork]}</span> network
+                        </p>
+                        {/* Show address below QR */}
+                        <div className="bg-gray-50 rounded-xl p-3 mt-3">
+                          <div className="flex items-center gap-2">
+                            <p className="font-mono text-xs text-[rgba(68,68,68,1)] break-all flex-1 text-left">{addr}</p>
+                            <button onClick={() => copyAddress(addr, `qr_${selectedNetwork}`)}
+                              className="shrink-0 px-2.5 py-1 bg-[rgba(88,57,49,1)] text-white text-xs rounded-lg hover:bg-[rgba(68,47,39,1)] transition-colors cursor-pointer">
+                              {copied === `qr_${selectedNetwork}` ? "Copied!" : "Copy"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -294,7 +516,7 @@ const CryptoPaymentPage = () => {
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
                 <h4 className="font-semibold text-amber-800 mb-2">⚠️ Important</h4>
                 <ul className="text-sm text-amber-700 space-y-1.5">
-                  <li>• Send the exact {method} equivalent of {order ? formatPrice(order.total) : "..."}</li>
+                  <li>• Send the exact {method} equivalent of {order ? formatPrice(order.total) : "..."}{cryptoPrice && order ? ` (≈ ${getCryptoEquivalent()} ${getCryptoSymbol()})` : ""}</li>
                   <li>• Double-check the wallet address before sending</li>
                   <li>• Upload proof after completing the transfer</li>
                   <li>• Your order will be processed once payment is verified</li>

@@ -482,7 +482,7 @@ export function Orders() {
 
       {/* ===== FULL ORDER DETAILS DIALOG ===== */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-3xl border-0 shadow-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-3xl w-[calc(100%-2rem)] border-0 shadow-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Order Details</DialogTitle>
             <DialogDescription>Complete order information and checkout details.</DialogDescription>
@@ -558,7 +558,7 @@ export function Orders() {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">{item.name}</p>
+                            <p className="text-sm font-medium text-slate-900 truncate max-w-[140px] sm:max-w-none">{item.name}</p>
                             <p className="text-xs text-slate-500">Qty: {item.quantity}</p>
                           </div>
                           <p className="text-sm font-bold text-slate-900 shrink-0">{formatCurrency(item.price * item.quantity)}</p>
@@ -638,7 +638,7 @@ export function Orders() {
 
                 {/* Order Meta */}
                 <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-xs text-slate-400">
-                  <span>Order ID: {selectedOrder.id}</span>
+                  <span className="break-all">Order ID: {selectedOrder.id}</span>
                   <span>Created: {formatDate(selectedOrder.date)}</span>
                 </div>
               </div>

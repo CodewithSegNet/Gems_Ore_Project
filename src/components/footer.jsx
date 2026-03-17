@@ -211,7 +211,7 @@ const Footer = () => {
         
         <div className="max-w-screen-2xl px-5 mx-auto flex items-center justify-between">
         
-        <p className="text-white text-xs md:text-sm">© {new Date().getFullYear()} GemsOre2026. All rights reserved.</p>
+        <p className="text-white text-xs md:text-sm">Gems Ore Limited {new Date().getFullYear()} ©. All Rights Reserved.</p>
 
         <div className="flex items-center gap-2">
             <img src={paystack} alt="" className="w-[2s0px] h-[20px]" />

@@ -156,7 +156,11 @@ const CartPage = () => {
                           <td className="px-6 py-5">
                             <div className="flex items-center gap-4">
                               <Link to={`/product/${item.id}`} className="w-[80px] h-[100px] rounded-xl overflow-hidden shrink-0 bg-gray-100">
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                {item.image && (/\.(mp4|webm|mov|avi)(\?|$)/i.test(item.image) || item.image.includes('/video/')) ? (
+                                  <video src={item.image} className="w-full h-full object-cover" muted playsInline autoPlay loop />
+                                ) : (
+                                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                )}
                               </Link>
                               <div>
                                 <Link to={`/product/${item.id}`} className="text-sm lg:text-base font-normal font-helvetica text-[rgba(68,68,68,1)] hover:text-[rgba(88,57,49,1)] transition-colors no-underline line-clamp-2">{item.name}</Link>
@@ -186,7 +190,11 @@ const CartPage = () => {
                   {cartItems.map((item) => (
                     <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm flex gap-4">
                       <Link to={`/product/${item.id}`} className="w-[90px] h-[90px] rounded-xl overflow-hidden shrink-0 bg-gray-100">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        {item.image && (/\.(mp4|webm|mov|avi)(\?|$)/i.test(item.image) || item.image.includes('/video/')) ? (
+                          <video src={item.image} className="w-full h-full object-cover" muted playsInline autoPlay loop />
+                        ) : (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        )}
                       </Link>
                       <div className="flex-1 min-w-0 flex flex-col justify-between">
                         <div>

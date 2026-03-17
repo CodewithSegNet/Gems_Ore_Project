@@ -229,7 +229,7 @@ const SecondSection = () => {
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
         <span className="text-white text-3xl md:text-4xl font-thin">{item.name}</span>
         <Link
-          to={`/products?category=${item.category}`}
+          to={`/products?category=${item.category}&gender=${gender}`}
           className="border px-6 py-3 text-sm hover:bg-primary duration-300 transition-colors rounded-md border-white text-white bg-transparent"
         >
           View Collection

@@ -107,7 +107,7 @@ export function CustomRequests() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-sm bg-white rounded-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -121,7 +121,7 @@ export function CustomRequests() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-sm bg-white rounded-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -135,7 +135,7 @@ export function CustomRequests() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-sm bg-white rounded-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -149,7 +149,7 @@ export function CustomRequests() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-sm bg-white rounded-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -165,7 +165,7 @@ export function CustomRequests() {
       </div>
 
       {/* Filters */}
-      <Card className="border-0 shadow-sm">
+      <Card className="border-0 shadow-sm bg-white rounded-xl">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
@@ -212,7 +212,7 @@ export function CustomRequests() {
       </Card>
 
       {/* Requests Table */}
-      <Card className="border-0 shadow-sm">
+      <Card className="border-0 shadow-sm bg-white rounded-xl">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg font-semibold text-slate-900">
             {filterStatus === 'all' ? 'All Requests' : `${filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)} Requests`} ({filteredRequests.length})
