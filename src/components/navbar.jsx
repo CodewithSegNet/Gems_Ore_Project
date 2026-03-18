@@ -251,10 +251,10 @@ const Navbar = ({ dark = true }) => {
         <ul className={`flex lg:ml-[8.5rem] items-center justify-center gap-4 md:gap-6 rounded-md md:rounded-lg duration-75 transition-underline py-1 px-2 md:py-1.5 md:px-4 ${iconBg}`}>
           
                    <li onClick={() => setGender("women")} className={`cursor-pointer mb-1.5 lg:mb-0 duration-300 ${gender === "women" ? "underline underline-offset-4" : "hover:underline"}`}>
-            <span className="font-thin text-[10px] md:text-sm">Women</span>
+            <span className="font-bold text-sm md:text-base">Women</span>
           </li>
           <li onClick={() => setGender("men")} className={`cursor-pointer mb-1.5 lg:mb-0 duration-300 ${gender === "men" ? "underline underline-offset-4" : "hover:underline"}`}>
-            <span className="font-thin text-[10px] md:text-sm">Men</span>
+            <span className="font-bold text-sm md:text-base">Men</span>
           </li>
  
         </ul>

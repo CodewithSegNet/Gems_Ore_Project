@@ -68,10 +68,10 @@ const Home = () => {
                   className={`group flex flex-col items-center gap-1 transition-all duration-500 ease-out no-underline ${btnHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                   style={{ transitionDelay: btnHovered ? `${i * 80}ms` : '0ms' }}
                 >
-                  <div className="rounded-full w-[45px] h-[45px] p-3 bg-[rgba(255,255,255,0.15)] cursor-pointer hover:bg-[#958169] transition-all duration-300 hover:scale-110">
+                  <div className="rounded-full w-[49px] h-[49px] md:w-[55px] md:h-[55px] p-3 bg-[rgba(255,255,255,0.15)] cursor-pointer hover:bg-[#958169] transition-all duration-300 hover:scale-110">
                     <img className="w-full h-full" src={btn.img} alt={btn.alt} />
                   </div>
-                  <span className="text-[10px] text-white/70 group-hover:text-white transition-colors duration-300">{btn.label}</span>
+                  <span className="text-[14px] md:text-[14px] text-white/70 group-hover:text-white transition-colors duration-300">{btn.label}</span>
                 </Link>
               ))}
             </div>
