@@ -4,6 +4,7 @@ import { useCart } from "../contexts/cartContext";
 import { useGender } from "../contexts/genderContext";
 import { useFavorites } from "../contexts/FavoritesContext";
 import storefrontApi from "../services/api";
+import { getCached, setCache } from "../utils/cache";
 import { useCurrency } from "../contexts/CurrencyContext";
 
 const isVideoUrl = (url) => url && (/\.(mp4|webm|mov|avi)(\?|$)/i.test(url) || url.includes('/video/'));
@@ -75,18 +76,27 @@ const NewestCollections = () => {
   const { gender } = useGender();
   const { isFavorited, toggleFavorite } = useFavorites();
   const { formatPrice, symbol } = useCurrency();
-  // Fetch newest collection products from API
+  // Fetch newest collection products from API (with sessionStorage cache)
   useEffect(() => {
     const fetchNewest = async () => {
       setLoading(true);
       try {
-        const genderParam = gender === "men" ? "male" : "female";
-        const data = await storefrontApi.products.getAll({
-          is_new_collection: "true",
-          gender: genderParam,
-          status: "active",
-        });
-        setProducts(data.map((p) => ({
+        const cacheKey = `gem_newest_${gender}`;
+        const cached = getCached(cacheKey);
+
+        let rawData;
+        if (cached) {
+          rawData = cached;
+        } else {
+          rawData = await storefrontApi.products.getAll({
+            is_new_collection: "true",
+            gender: gender === "men" ? "male" : "female",
+            status: "active",
+          });
+          setCache(cacheKey, rawData);
+        }
+
+        setProducts(rawData.map((p) => ({
           id: p.id,
           name: p.name,
           price: p.price,
@@ -108,6 +118,7 @@ const NewestCollections = () => {
     fetchNewest();
     setVisibleCount(ITEMS_PER_PAGE);
   }, [gender]);
+
 
   const inStockCount = products.filter((p) => p.inStock).length;
   const outOfStockCount = products.filter((p) => !p.inStock).length;
@@ -366,7 +377,7 @@ const NewestCollections = () => {
                   {isVideoUrl(product.image) ? (
                     <video src={product.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" autoPlay loop muted playsInline />
                   ) : product.image ? (
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={product.image} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   ) : null}
                   <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
                   <button

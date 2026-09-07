@@ -34,7 +34,8 @@ const storefrontApi = {
   products: {
     getAll: (params = {}) => {
       const query = new URLSearchParams(params).toString();
-      return request(`/products${query ? `?${query}` : ""}`);
+      return request(`/products${query ? `?${query}` : ""}`)
+        .then((data) => (Array.isArray(data) ? data : data.items || []));
     },
     getById: (id) => request(`/products/${id}`),
   },

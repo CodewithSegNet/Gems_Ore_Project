@@ -8,6 +8,9 @@ import filter from "../../assets/filter.png";
 import icon2 from "../../assets/icon2.png";
 import stock from "../../assets/stock.png";
 import storefrontApi from "../../services/api";
+import { getCached, setCache } from "../../utils/cache";
+
+
 
 import { useGender } from "../../contexts/genderContext";
 import { useFavorites } from "../../contexts/FavoritesContext";
@@ -77,19 +80,37 @@ const ProductPage = () => {
   const { gender } = useGender();
   const { isFavorited, toggleFavorite } = useFavorites();
 
-  // Fetch products and categories from API
+  // Fetch products and categories from API (with sessionStorage cache)
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        const productCacheKey = `gem_products_${genderFilter}`;
+        const categoryCacheKey = "gem_categories";
+
+        const cachedProducts  = getCached(productCacheKey);
+        const cachedCategories = getCached(categoryCacheKey);
+
         const params = { status: "active" };
         if (genderFilter !== "all") {
           params.gender = genderFilter === "men" ? "male" : "female";
         }
+
         const [productsData, categoriesData] = await Promise.all([
-          storefrontApi.products.getAll(params),
-          storefrontApi.categories.getAll(),
+          cachedProducts
+            ? Promise.resolve(cachedProducts)
+            : storefrontApi.products.getAll(params).then((data) => {
+                setCache(productCacheKey, data);
+                return data;
+              }),
+          cachedCategories
+            ? Promise.resolve(cachedCategories)
+            : storefrontApi.categories.getAll().then((data) => {
+                setCache(categoryCacheKey, data);
+                return data;
+              }),
         ]);
+
         setAllProducts(productsData.map((p) => ({
           id: p.id,
           name: p.name,
@@ -114,6 +135,7 @@ const ProductPage = () => {
     fetchData();
     setVisibleCount(ITEMS_PER_PAGE);
   }, [genderFilter]);
+
 
   const categoryNames = ["all", ...categories.map((c) => c.name.toLowerCase())];
 
@@ -380,7 +402,7 @@ const ProductPage = () => {
                           {isVideoUrl(product.image) ? (
                             <video src={product.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" autoPlay loop muted playsInline />
                           ) : product.image ? (
-                            <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          <img src={product.image} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                           ) : null}
                           <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
                           <button

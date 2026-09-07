@@ -4,6 +4,7 @@ import { useCart } from "../contexts/cartContext";
 import { useGender } from "../contexts/genderContext";
 import { useFavorites } from "../contexts/FavoritesContext";
 import storefrontApi from "../services/api";
+import { getCached, setCache } from "../utils/cache";
 import { useCurrency } from "../contexts/CurrencyContext";
 
 import icon2 from "../assets/icon2.png";
@@ -57,18 +58,27 @@ const BestSellers = () => {
   const { formatPrice } = useCurrency();
   const { gender } = useGender();
 
-  // Fetch best seller products from API
+  // Fetch best seller products from API (with sessionStorage cache)
   useEffect(() => {
     const fetchBestSellers = async () => {
       setLoading(true);
       try {
-        const genderParam = gender === "men" ? "male" : "female";
-        const data = await storefrontApi.products.getAll({
-          is_best_seller: "true",
-          gender: genderParam,
-          status: "active",
-        });
-        setProducts(data.map((p) => ({
+        const cacheKey = `gem_bestsellers_${gender}`;
+        const cached = getCached(cacheKey);
+
+        let rawData;
+        if (cached) {
+          rawData = cached;
+        } else {
+          rawData = await storefrontApi.products.getAll({
+            is_best_seller: "true",
+            gender: gender === "men" ? "male" : "female",
+            status: "active",
+          });
+          setCache(cacheKey, rawData);
+        }
+
+        setProducts(rawData.map((p) => ({
           id: p.id,
           name: p.name,
           price: p.price,
@@ -90,6 +100,7 @@ const BestSellers = () => {
     fetchBestSellers();
     setVisibleCount(ITEMS_PER_PAGE);
   }, [gender]);
+
 
   const visible = products.slice(0, visibleCount);
   const hasMore = visibleCount < products.length;
@@ -176,7 +187,7 @@ const BestSellers = () => {
                   {isVideoUrl(product.image) ? (
                     <video src={product.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" autoPlay loop muted playsInline />
                   ) : product.image ? (
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={product.image} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   ) : null}
                   <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
                   <button
