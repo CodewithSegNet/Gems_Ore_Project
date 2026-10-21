@@ -1,3 +1,6 @@
+// NOTE: Older helper from previous project.
+// Customer auth is managed via src/contexts/AuthContext.jsx and src/services/api.js.
+// Admin auth is managed via src/features/admin/utils/api.ts.
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";

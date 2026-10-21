@@ -1,65 +1,67 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import HomePage from "./pages/homePage";
-import ProductPage from "./pages/productPage";
-import ProductDetailPage from "./pages/productDetailPage";
-import LoginPage from "./pages/loginPage";
-import SignUpPage from "./pages/signUpPage";
-import CheckoutPage from "./pages/checkoutPage";
-import CartPage from "./pages/cartPage";
-import CryptoPaymentPage from "./pages/cryptoPaymentPage";
-import OrderSuccessPage from "./pages/orderSuccessPage";
-import TransactionHistory from "./pages/transactionHistoryPage";
-import ShippingPolicyPage from "./pages/shippingPolicyPage";
-import RefundPolicyPage from "./pages/refundPolicyPage";
-import TermsPage from "./pages/termsPage";
-import PrivacyPolicyPage from "./pages/privacyPolicyPage";
+import HomePage from "./features/homepage/pages/HomePage";
+import ProductPage from "./features/products/pages/ProductListPage";
+import ProductDetailPage from "./features/products/pages/ProductDetailPage";
+import LoginPage from "./features/auth/pages/LoginPage";
+import SignUpPage from "./features/auth/pages/SignUpPage";
+import CheckoutPage from "./features/checkout/pages/CheckoutPage";
+import CartPage from "./features/cart/pages/CartPage";
+import CryptoPaymentPage from "./features/payment/pages/CryptoPaymentPage";
+import OrderSuccessPage from "./features/orders/pages/OrderSuccessPage";
+import TransactionHistory from "./features/orders/pages/TransactionHistoryPage";
+import ShippingPolicyPage from "./features/legal/pages/ShippingPolicyPage";
+import RefundPolicyPage from "./features/legal/pages/RefundPolicyPage";
+import TermsPage from "./features/legal/pages/TermsPage";
+import PrivacyPolicyPage from "./features/legal/pages/PrivacyPolicyPage";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { CartProvider } from "./contexts/cartContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
-import ScrollToTop from "./components/ScrollToTop";
-import WhatsAppWidget from "./components/WhatsAppWidget";
+import ScrollToTop from "./features/homepage/utils/ScrollToTop";
+import WhatsAppWidget from "./features/homepage/utils/WhatsAppWidget";
+import { Toaster } from "sonner";
+import FloatingActivityDock from "./components/FloatingActivityDock";
 
 
 // Admin Dashboard - Lazy loaded
 const AdminDashboardLayout = lazy(() =>
-  import("./admin/components/dashboard-layout").then((m) => ({ default: m.DashboardLayout }))
+  import("./features/admin/components/dashboard-layout").then((m) => ({ default: m.DashboardLayout }))
 );
 const AdminLogin = lazy(() =>
-  import("./admin/pages/login").then((m) => ({ default: m.Login }))
+  import("./features/admin/pages/login").then((m) => ({ default: m.Login }))
 );
 const AdminDashboardOverview = lazy(() =>
-  import("./admin/pages/dashboard-overview").then((m) => ({ default: m.DashboardOverview }))
+  import("./features/admin/pages/dashboard-overview").then((m) => ({ default: m.DashboardOverview }))
 );
 const AdminCategories = lazy(() =>
-  import("./admin/pages/categories").then((m) => ({ default: m.Categories }))
+  import("./features/admin/pages/categories").then((m) => ({ default: m.Categories }))
 );
 const AdminProducts = lazy(() =>
-  import("./admin/pages/products").then((m) => ({ default: m.Products }))
+  import("./features/admin/pages/products").then((m) => ({ default: m.Products }))
 );
 const AdminOrders = lazy(() =>
-  import("./admin/pages/orders").then((m) => ({ default: m.Orders }))
+  import("./features/admin/pages/orders").then((m) => ({ default: m.Orders }))
 );
 const AdminReviews = lazy(() =>
-  import("./admin/pages/reviews").then((m) => ({ default: m.Reviews }))
+  import("./features/admin/pages/reviews").then((m) => ({ default: m.Reviews }))
 );
 const AdminCustomRequests = lazy(() =>
-  import("./admin/pages/custom-requests").then((m) => ({ default: m.CustomRequests }))
+  import("./features/admin/pages/custom-requests").then((m) => ({ default: m.CustomRequests }))
 );
 const AdminDiscounts = lazy(() =>
-  import("./admin/pages/discounts").then((m) => ({ default: m.Discounts }))
+  import("./features/admin/pages/discounts").then((m) => ({ default: m.Discounts }))
 );
 const AdminFinancialReports = lazy(() =>
-  import("./admin/pages/financial-reports").then((m) => ({ default: m.FinancialReports }))
+  import("./features/admin/pages/financial-reports").then((m) => ({ default: m.FinancialReports }))
 );
 const AdminSettings = lazy(() =>
-  import("./admin/pages/settings").then((m) => ({ default: m.Settings }))
+  import("./features/admin/pages/settings").then((m) => ({ default: m.Settings }))
 );
 const AdminShipping = lazy(() =>
-  import("./admin/pages/shipping").then((m) => ({ default: m.Shipping }))
+  import("./features/admin/pages/shipping").then((m) => ({ default: m.Shipping }))
 );
 const AdminSubscribers = lazy(() =>
-  import("./admin/pages/subscribers").then((m) => ({ default: m.Subscribers }))
+  import("./features/admin/pages/subscribers").then((m) => ({ default: m.Subscribers }))
 );
 
 // Admin auth guard
@@ -98,8 +100,10 @@ function App() {
     <GoogleOAuthProvider clientId="493910047901-febc082scanlgjm838apfhq93qupj50q.apps.googleusercontent.com">
       <CurrencyProvider>
       <CartProvider>
+        <Toaster position="top-right" theme="dark" closeButton richColors />
         <ScrollToTop />
         <ConditionalWhatsApp />
+        <FloatingActivityDock />
         <Routes>
           {/* Customer-facing routes */}
           <Route path="/" element={<HomePage />} />
@@ -225,6 +229,14 @@ function App() {
               }
             />
           </Route>
+
+          {/* Dashboard route aliases & compatibility */}
+          <Route path="/dashboard/login" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
+          <Route path="/dashboard/*" element={<Navigate to="/admin" replace />} />
+          <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
+          <Route path="/admin-dashboard/*" element={<Navigate to="/admin" replace />} />
+          <Route path="/super-admin-dashboard" element={<Navigate to="/admin" replace />} />
         </Routes>
       </CartProvider>
       </CurrencyProvider>

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { showAddToCartToast } from "../utils/storefrontToasts";
 
 const CartContext = createContext();
 
@@ -59,7 +60,7 @@ export const CartProvider = ({ children }) => {
     };
   }, []);
 
-  const addToCart = (product, quantity = 1) => {
+  const addToCart = (product, quantity = 1, silent = false) => {
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
@@ -69,6 +70,9 @@ export const CartProvider = ({ children }) => {
       }
       return [...prev, { ...product, quantity }];
     });
+    if (!silent) {
+      showAddToCartToast(product, quantity);
+    }
   };
 
   const removeFromCart = (productId) => {

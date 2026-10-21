@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
 import AuthContext from "./AuthContext";
 import storefrontApi from "../services/api";
+import { showWishlistToast } from "../utils/storefrontToasts";
 
 const FavoritesContext = createContext();
 
@@ -91,7 +92,16 @@ export const FavoritesProvider = ({ children }) => {
     fetchFavoriteIds();
   }, [fetchFavoriteIds]);
 
-  const toggleFavorite = async (productId) => {
+  const toggleFavorite = async (productOrId, productMeta = null, silent = false) => {
+    let productId = productOrId;
+    let meta = productMeta;
+    if (typeof productOrId === "object" && productOrId !== null) {
+      productId = productOrId.id || productOrId.product_id;
+      meta = productOrId;
+    }
+
+    if (!productId) return false;
+
     // Guest mode: toggle in localStorage only
     if (!isAuthenticated) {
       const isFav = favoriteIds.has(productId);
@@ -104,7 +114,20 @@ export const FavoritesProvider = ({ children }) => {
       });
       // Also optimistically update favoriteItems for the wishlist panel
       if (isFav) {
-        setFavoriteItems((prev) => prev.filter((f) => f.product_id !== productId));
+        setFavoriteItems((prev) => prev.filter((f) => (f.product_id || f.id) !== productId));
+      } else if (meta) {
+        const newItem = {
+          id: productId,
+          product_id: productId,
+          name: meta.name || "Luxury Item",
+          price: meta.price || 0,
+          image: meta.image || meta.images?.[0]?.thumb_url || meta.images?.[0]?.image_url,
+          product: meta
+        };
+        setFavoriteItems((prev) => [newItem, ...prev.filter((f) => (f.product_id || f.id) !== productId)]);
+      }
+      if (!silent) {
+        showWishlistToast(meta || { id: productId, name: "Luxury Item" }, !isFav);
       }
       return true;
     }
@@ -118,9 +141,23 @@ export const FavoritesProvider = ({ children }) => {
       return next;
     });
 
-    // Also optimistically update favoriteItems when removing
+    // Also optimistically update favoriteItems
     if (isFav) {
-      setFavoriteItems((prev) => prev.filter((f) => f.product_id !== productId));
+      setFavoriteItems((prev) => prev.filter((f) => (f.product_id || f.id) !== productId));
+    } else if (meta) {
+      const newItem = {
+        id: productId,
+        product_id: productId,
+        name: meta.name || "Luxury Item",
+        price: meta.price || 0,
+        image: meta.image || meta.images?.[0]?.thumb_url || meta.images?.[0]?.image_url,
+        product: meta
+      };
+      setFavoriteItems((prev) => [newItem, ...prev.filter((f) => (f.product_id || f.id) !== productId)]);
+    }
+
+    if (!silent) {
+      showWishlistToast(meta || { id: productId, name: "Luxury Item" }, !isFav);
     }
 
     try {

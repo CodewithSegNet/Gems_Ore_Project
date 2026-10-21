@@ -4,4 +4,21 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: 5173,
+    proxy: {
+      // Forward /api requests to the local FastAPI backend
+      '/api': {
+        target: 'http://localhost:7001',
+        changeOrigin: true,
+        secure: false,
+      },
+      // Forward /media requests (images served by FastAPI)
+      '/media': {
+        target: 'http://localhost:7001',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })

@@ -1,0 +1,47 @@
+services:
+  frontend:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - gems-ore-net
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=gems_ore
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - gems-ore-net
+
+  backend:
+    build: ./gems_be
+    ports:
+      - "7001:7001"
+    environment:
+      - NODE_ENV=production
+      - DB_TYPE=postgresql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=gems_ore
+      - DB_URL=postgresql://postgres:postgres@db:5432/gems_ore
+    networks:
+      - gems-ore-net
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+
+networks:
+  gems-ore-net:
+    driver: bridge

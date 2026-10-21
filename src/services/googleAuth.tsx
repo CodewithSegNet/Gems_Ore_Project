@@ -1,6 +1,8 @@
+// NOTE: Replaced by src/contexts/AuthContext.jsx using storefrontApi.auth.googleAuth
+// Kept for reference.
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useUser } from "../context/Users/UserContext";
+// import { useUser } from "../context/Users/UserContext"; // Old context path commented out
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
@@ -8,7 +10,8 @@ export const useGoogleLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { setUser } = useUser();
+  // const { setUser } = useUser(); // Old context
+  const setUser = (_user: any) => {};
 
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [pendingUserData, setPendingUserData] = useState<any>(null);
@@ -155,7 +158,7 @@ export const useGoogleLogin = () => {
       console.log("✓ Cleared all previous tokens and user data");
 
       // Make API call to backend
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/google`, {
+      const response = await axios.post(`${(import.meta as any).env.VITE_API_BASE_URL}/api/v1/auth/google`, {
         id_token: credentialResponse.credential,
       });
 
@@ -205,7 +208,7 @@ export const useGoogleLogin = () => {
         throw new Error("No access token found");
       }
 
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users/me`, {
+      const response = await axios.get(`${(import.meta as any).env.VITE_API_BASE_URL}/api/v1/users/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

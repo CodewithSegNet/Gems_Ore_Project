@@ -13,6 +13,7 @@ import App from './App.jsx'
 import { GenderProvider } from './contexts/genderContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { FavoritesProvider } from './contexts/FavoritesContext.jsx'
+import { CustomRequestProvider } from './contexts/CustomRequestContext.jsx'
 
 const queryClient = new QueryClient();
 
@@ -26,7 +27,9 @@ createRoot(document.getElementById('root')).render(
     <AuthProvider>
     <FavoritesProvider>
     <GenderProvider>
-    <App />
+      <CustomRequestProvider>
+        <App />
+      </CustomRequestProvider>
     </GenderProvider>
     </FavoritesProvider>
     </AuthProvider>

@@ -42,7 +42,10 @@ const storefrontApi = {
 
   // Categories
   categories: {
-    getAll: () => request("/categories"),
+    getAll: (params = {}) => {
+      const query = new URLSearchParams(params).toString();
+      return request(`/categories${query ? `?${query}` : ""}`);
+    },
   },
 
   // Auth
@@ -79,7 +82,10 @@ const storefrontApi = {
 
   // Reviews
   reviews: {
-    getByProduct: (productId) => request(`/reviews?product_id=${productId}&status=approved`),
+    getByProduct: (productId, status = "approved") => {
+      const query = status && status !== "all" ? `&status=${status}` : "";
+      return request(`/reviews?product_id=${productId}${query}`);
+    },
     getMyReview: (productId) => request(`/reviews/my-review/${productId}`),
     create: (data) =>
       request("/reviews", { method: "POST", body: JSON.stringify(data) }),
@@ -98,8 +104,16 @@ const storefrontApi = {
 
   // Subscribers
   subscribers: {
-    subscribe: (email) =>
-      request("/subscribers", { method: "POST", body: JSON.stringify({ email }) }),
+    subscribe: async (email) => {
+      const res = await fetch(`${API_BASE}/subscribers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Subscription request could not be completed.");
+      return data;
+    },
   },
 
   // Favorites

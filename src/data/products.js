@@ -1,14 +1,14 @@
-import watches from "../assets/watches.avif";
-import rings from "../assets/rings.avif";
-import earringsImg from "../assets/earrings.avif";
-import necklace from "../assets/neckless.avif";
-import bracelet from "../assets/bracklet.avif";
-import maleCol1 from "../assets/male_collection_1.png";
-import maleCol2 from "../assets/male_collection_2.png";
-import maleCol3 from "../assets/male_collection_3.png";
-import maleCol4 from "../assets/male_collection_4.png";
-import maleCol5 from "../assets/male_collection_5.png";
-import maleCol6 from "../assets/male_collection_6.png";
+const watches = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113190/gems_ore/watches.avif";
+const rings = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113188/gems_ore/rings.avif";
+const earringsImg = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113182/gems_ore/earrings.avif";
+const necklace = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113178/gems_ore/neckless.avif";
+const bracelet = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113186/gems_ore/bracklet.avif";
+const maleCol1 = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113192/gems_ore/male_collection_1.avif";
+const maleCol2 = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113194/gems_ore/male_collection_2.avif";
+const maleCol3 = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113195/gems_ore/male_collection_3.avif";
+const maleCol4 = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113198/gems_ore/male_collection_4.avif";
+const maleCol5 = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113199/gems_ore/male_collection_5.avif";
+const maleCol6 = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113200/gems_ore/male_collection_6.avif";
 
 export const newestProducts = [
   { id: 201, name: "Pearl & Diamond Pendant", rating: 5.0, price: 1300000, image: necklace, inStock: true, category: "necklaces", gender: "women", description: "Elevate your elegance with this timeless pearl & diamond pendant necklace, crafted to capture light and attention effortlessly. At its centre sits a stunning emerald-cut green gemstone, precisely faceted to enhance its depth, brilliance, and rich color saturation. The vibrant stone is securely held in a cathedral gold prong setting, allowing maximum light exposure for a subtle glow. Accentuating the gemstone is a delicate display of interlinking accent stones, adding a subtle touch of sparkle and sophistication. The pendant is suspended from a fine, professional gold chain designed for both durability and graceful draping along the neckline. Perfectly built for everyday luxury and special occasions, this extraordinary creation is bound to become your statement piece.", features: ["Emerald-cut green gemstone centrepiece", "Premium gold chain with secure clasp", "Sparkling accent stones detailing", "Elegant, minimalist design", "Ideal for formal events and everyday wear"] },

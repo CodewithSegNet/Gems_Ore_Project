@@ -1,5 +1,5 @@
 {
-  "name": "smash-travels",
+  "name": "Gems Ore",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,8 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "upload-assets": "node scripts/upload-assets.js",
+    "apply-cloudinary": "node scripts/apply-cloudinary.js",
+    "cloudinary-sync": "node scripts/upload-assets.js && node scripts/apply-cloudinary.js"
   },
+
   "dependencies": {
     "@date-io/date-fns": "^3.2.1",
     "@emotion/react": "^11.14.0",
@@ -41,7 +45,7 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-oauth/google": "^0.12.1",
-    "@tailwindcss/typography": "^0.5.16",
+    "@tailwindcss/typography": "^0.5.4",
     "@tanstack/react-query": "^5.66.9",
     "axios": "^1.7.9",
     "browser-image-compression": "^2.0.2",
@@ -65,7 +69,7 @@
     "react-icons": "^5.5.0",
     "react-lazy-load-image-component": "^1.6.3",
     "react-paystack": "^6.0.0",
-    "react-router-dom": "^6.28.1",
+    "react-router-dom": "^7.18.4",
     "react-slick": "^0.30.3",
     "react-to-print": "^3.0.6",
     "recharts": "^2.15.1",
@@ -78,18 +82,21 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^1.3.2",
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.6.1",
+    "cloudinary": "^2.11.0",
+    "dotenv": "^18.0.8",
     "esbuild": "^0.25.0",
     "eslint": "^9.17.0",
     "eslint-plugin-react": "^7.37.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.17",
+    "postcss": "^8.5.30",
+    "tailwindcss": "^3.4.19",
     "vite": "^6.1.0"
   }
 }
