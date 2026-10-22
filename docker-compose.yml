@@ -17,21 +17,6 @@ services:
     networks:
       - gems-ore-net
 
-  migrate:
-    build:
-      context: ./gems_be
-    env_file:
-      - "./gems_be/.env"
-    environment:
-      - DB_URL=postgresql://postgres:postgres@db:5432/gems_ore
-    networks:
-      - private
-    depends_on:
-      db:
-        condition: service_healthy
-    command: alembic upgrade head
-    restart: "no"
-
   seed:
     build:
       context: ./gems_be
@@ -44,11 +29,26 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     command: >
       psql -h db -U postgres -d gems_ore
       -f /app/docker-entrypoint-initdb.d/01-init.sql
+    restart: "no"
+
+  migrate:
+    build:
+      context: ./gems_be
+    env_file:
+      - "./gems_be/.env"
+    environment:
+      - DB_URL=postgresql://postgres:postgres@db:5432/gems_ore
+    networks:
+      - private
+    depends_on:
+      db:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+    command: alembic upgrade head
     restart: "no"
 
   db:
