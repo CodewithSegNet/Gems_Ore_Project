@@ -1,12 +1,55 @@
 services:
   frontend:
-    build: .
+    build:
+      context: .
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:7001}
+        - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID:-2743210259-u898dfmtgclmn56ug5jbjbtvidbmfb6s.apps.googleusercontent.com}
+        - VITE_PAYSTACK_PUBLIC_KEY=${VITE_PAYSTACK_PUBLIC_KEY:-pk_live_3c754baa7a928b212da07a23ccaa471c51ec1828}
+    env_file:
+      - .env
     ports:
       - "3000:3000"
+    depends_on:
+      - backend
     environment:
       - NODE_ENV=production
     networks:
       - gems-ore-net
+
+  migrate:
+    build:
+      context: ./gems_be
+    env_file:
+      - "./gems_be/.env"
+    environment:
+      - DB_URL=postgresql://postgres:postgres@db:5432/gems_ore
+    networks:
+      - private
+    depends_on:
+      db:
+        condition: service_healthy
+    command: alembic upgrade head
+    restart: "no"
+
+  seed:
+    build:
+      context: ./gems_be
+    env_file:
+      - "./gems_be/.env"
+    environment:
+      - PGPASSWORD=postgres
+    networks:
+      - private
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    command: >
+      psql -h db -U postgres -d gems_ore
+      -f /app/docker-entrypoint-initdb.d/01-init.sql
+    restart: "no"
 
   db:
     image: postgres:15-alpine
@@ -18,13 +61,21 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gems_ore"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
-      - gems-ore-net
+      - private
+
 
   backend:
     build: ./gems_be
     ports:
       - "7001:7001"
+    env_file:
+      - ./gems_be/.env
     environment:
       - NODE_ENV=production
       - DB_TYPE=postgresql
@@ -36,8 +87,12 @@ services:
       - DB_URL=postgresql://postgres:postgres@db:5432/gems_ore
     networks:
       - gems-ore-net
+      - private
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:
@@ -45,3 +100,6 @@ volumes:
 networks:
   gems-ore-net:
     driver: bridge
+  private:
+    driver: bridge
+    internal: "true"

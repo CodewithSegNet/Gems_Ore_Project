@@ -4,6 +4,5 @@ dist
 .github
 gems_be
 fastapi-boilerplate
-.env
 .DS_Store
 *.log
