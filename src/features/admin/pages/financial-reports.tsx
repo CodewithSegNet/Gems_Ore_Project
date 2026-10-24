@@ -50,7 +50,8 @@ export function FinancialReports() {
     const fetchOrders = async () => {
       try {
         const data = await adminApi.orders.getAll();
-        setOrders(data.map((o: any) => ({
+        const oList = Array.isArray(data) ? data : (data?.items || []);
+        setOrders(oList.map((o: any) => ({
           id: o.id,
           customer: o.customer || o.customer_name || "Customer",
           email: o.email || o.customer_email || "",

@@ -35,7 +35,8 @@ export function CustomRequests() {
       const params: Record<string, string> = {};
       if (filterStatus !== 'all') params.status = filterStatus;
       const data = await adminApi.customRequests.getAll(Object.keys(params).length > 0 ? params : undefined);
-      const mapped = data.map((r: any) => ({
+      const rList = Array.isArray(data) ? data : (data?.items || []);
+      const mapped = rList.map((r: any) => ({
         id: r.id,
         fullName: r.full_name || 'Unknown',
         email: r.email || '',

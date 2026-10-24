@@ -39,9 +39,10 @@ export function Categories() {
   const fetchCategories = async () => {
     try {
       const data = await adminApi.categories.getAll(searchTerm ? { search: searchTerm } : undefined);
-      setCategories(data);
+      setCategories(Array.isArray(data) ? data : (data?.items || []));
     } catch (e) {
       toast.error("Failed to fetch categories");
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -165,7 +166,7 @@ export function Categories() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categories.map((category) => (
+              {(Array.isArray(categories) ? categories : []).map((category) => (
                 <TableRow key={category.id} className="border-slate-100">
                   <TableCell className="font-medium text-slate-900">{category.name}</TableCell>
                   <TableCell className="text-slate-600">{category.description}</TableCell>

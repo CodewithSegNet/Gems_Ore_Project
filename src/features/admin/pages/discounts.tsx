@@ -84,20 +84,24 @@ export function Discounts() {
         adminApi.products.getAll(),
         adminApi.categories.getAll(),
       ]);
-      setDiscounts(discountsData.map((d: any) => ({
+      const dList = Array.isArray(discountsData) ? discountsData : (discountsData?.items || []);
+      const pList = Array.isArray(productsData) ? productsData : (productsData?.items || []);
+      const cList = Array.isArray(categoriesData) ? categoriesData : (categoriesData?.items || []);
+
+      setDiscounts(dList.map((d: any) => ({
         id: d.id, name: d.name, discountType: d.discount_type,
         code: d.code, type: d.type, value: d.value,
         minPurchase: d.min_purchase, orderMinAmount: d.order_min_amount,
         productId: d.product_id, maxUses: d.max_uses, usedCount: d.used_count || 0,
         expiresAt: d.expires_at, status: d.status, autoApply: d.auto_apply,
       })));
-      setProducts(productsData.map((p: any) => ({
+      setProducts(pList.map((p: any) => ({
         id: p.id, name: p.name, price: p.price,
         image: p.image || p.images?.[0]?.image_url || "",
         category: p.category_name?.toLowerCase() || "",
         gender: p.gender,
       })));
-      setCategories(categoriesData || []);
+      setCategories(cList);
     } catch (e) {
       console.error("Failed to load discounts data:", e);
       toast.error("Failed to load data");

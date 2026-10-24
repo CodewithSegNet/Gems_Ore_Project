@@ -70,7 +70,9 @@ export const adminApi = {
   products: {
     getAll: (params?: Record<string, string>) => {
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
-      return request<any[]>(`/products${query}`);
+      return request<any>(`/products${query}`).then((data) =>
+        Array.isArray(data) ? data : (data?.items || [])
+      );
     },
     getById: (id: string) => request<any>(`/products/${id}`),
     create: (data: any) =>
@@ -85,7 +87,9 @@ export const adminApi = {
   categories: {
     getAll: (params?: Record<string, string>) => {
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
-      return request<any[]>(`/categories${query}`);
+      return request<any>(`/categories${query}`).then((data) =>
+        Array.isArray(data) ? data : (data?.items || [])
+      );
     },
     getById: (id: string) => request<any>(`/categories/${id}`),
     create: (data: any) =>
@@ -100,7 +104,9 @@ export const adminApi = {
   orders: {
     getAll: (params?: Record<string, string>) => {
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
-      return request<any[]>(`/orders${query}`);
+      return request<any>(`/orders${query}`).then((data) =>
+        Array.isArray(data) ? data : (data?.items || [])
+      );
     },
     getById: (id: string) => request<any>(`/orders/${id}`),
     create: (data: any) =>
@@ -129,7 +135,10 @@ export const adminApi = {
 
   // Shipping
   shipping: {
-    getAll: () => request<any[]>("/shipping"),
+    getAll: () =>
+      request<any>("/shipping").then((data) =>
+        Array.isArray(data) ? data : (data?.items || [])
+      ),
     create: (data: any) =>
       request<any>("/shipping", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: any) =>
@@ -142,7 +151,9 @@ export const adminApi = {
   discounts: {
     getAll: (params?: Record<string, string>) => {
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
-      return request<any[]>(`/discounts${query}`);
+      return request<any>(`/discounts${query}`).then((data) =>
+        Array.isArray(data) ? data : (data?.items || [])
+      );
     },
     create: (data: any) =>
       request<any>("/discounts", { method: "POST", body: JSON.stringify(data) }),
@@ -156,7 +167,9 @@ export const adminApi = {
   reviews: {
     getAll: (params?: Record<string, string>) => {
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
-      return request<any[]>(`/reviews${query}`);
+      return request<any>(`/reviews${query}`).then((data) =>
+        Array.isArray(data) ? data : (data?.items || [])
+      );
     },
     create: (data: any) =>
       request<any>("/reviews", { method: "POST", body: JSON.stringify(data) }),
@@ -170,7 +183,9 @@ export const adminApi = {
   customRequests: {
     getAll: (params?: Record<string, string>) => {
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
-      return request<any[]>(`/custom-requests${query}`);
+      return request<any>(`/custom-requests${query}`).then((data) =>
+        Array.isArray(data) ? data : (data?.items || [])
+      );
     },
     create: (data: any) =>
       request<any>("/custom-requests", { method: "POST", body: JSON.stringify(data) }),
@@ -190,7 +205,10 @@ export const adminApi = {
 
   // Subscribers
   subscribers: {
-    getAll: () => request<any[]>("/subscribers"),
+    getAll: () =>
+      request<any>("/subscribers").then((data) =>
+        Array.isArray(data) ? data : (data?.items || [])
+      ),
   },
 
   // Upload

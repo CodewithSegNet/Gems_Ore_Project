@@ -61,9 +61,10 @@ export function Products() {
       if (filterCategory !== "all") params.category_id = filterCategory;
       if (filterStatus !== "all") params.status = filterStatus;
       const data = await adminApi.products.getAll(Object.keys(params).length > 0 ? params : undefined);
-      setProducts(data);
+      setProducts(Array.isArray(data) ? data : (data?.items || []));
     } catch (e) {
       toast.error("Failed to fetch products");
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -72,8 +73,10 @@ export function Products() {
   const fetchCategories = async () => {
     try {
       const data = await adminApi.categories.getAll();
-      setCategories(data);
-    } catch (e) { /* silent */ }
+      setCategories(Array.isArray(data) ? data : (data?.items || []));
+    } catch (e) {
+      setCategories([]);
+    }
   };
 
   useEffect(() => {
@@ -266,7 +269,7 @@ export function Products() {
                 <Select value={formData.category_id} onValueChange={(value) => setFormData({ ...formData, category_id: value })}>
                   <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select category" /></SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}
+                    {(Array.isArray(categories) ? categories : []).map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>
@@ -457,7 +460,7 @@ export function Products() {
               <SelectTrigger className="border-slate-200"><SelectValue placeholder="All Categories" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}
+                {(Array.isArray(categories) ? categories : []).map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -474,7 +477,7 @@ export function Products() {
 
       <Card className="border-0 shadow-sm bg-white rounded-xl">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold text-slate-900">All Products ({products.length})</CardTitle>
+          <CardTitle className="text-lg font-semibold text-slate-900">All Products ({(Array.isArray(products) ? products : []).length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -490,7 +493,7 @@ export function Products() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((product) => (
+              {(Array.isArray(products) ? products : []).map((product) => (
                 <TableRow key={product.id} className="border-slate-100">
                   <TableCell>
                     <div className="flex items-center gap-3">

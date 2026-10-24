@@ -39,6 +39,12 @@ export function DashboardLayout() {
         const res = await fetch(`${API_BASE}/api/v1/dashboard/stats`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (res.status === 401) {
+          localStorage.removeItem("admin_access_token");
+          localStorage.removeItem("admin_user");
+          navigate("/admin/login");
+          return;
+        }
         if (res.ok) {
           const json = await res.json();
           const data = json.data || {};
@@ -54,7 +60,7 @@ export function DashboardLayout() {
     fetchCounts();
     const interval = setInterval(fetchCounts, 30000); // Refresh every 30s
     return () => clearInterval(interval);
-  }, []);
+  }, [navigate]);
 
   // Close mobile sidebar on route change
   useEffect(() => {

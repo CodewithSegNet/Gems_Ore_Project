@@ -34,7 +34,8 @@ export function Reviews() {
   const fetchReviews = async () => {
     try {
       const data = await adminApi.reviews.getAll();
-      const mapped = data.map((r: any) => ({
+      const rList = Array.isArray(data) ? data : (data?.items || []);
+      const mapped = rList.map((r: any) => ({
         id: r.id,
         productId: r.product_id || '',
         productName: r.product_name || 'Unknown Product',
