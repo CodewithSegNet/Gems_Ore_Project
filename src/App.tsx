@@ -83,6 +83,22 @@ function ConditionalWhatsApp() {
   return <WhatsAppWidget />;
 }
 
+// Only render Toaster on non-auth pages (hide on /login and /signup)
+function ConditionalToaster() {
+  const location = useLocation();
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
+  if (isAuthPage) return null;
+  return <Toaster position="top-right" theme="dark" closeButton richColors />;
+}
+
+// Only render FloatingActivityDock on non-auth pages (hide on /login and /signup)
+function ConditionalFloatingActivityDock() {
+  const location = useLocation();
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
+  if (isAuthPage) return null;
+  return <FloatingActivityDock />;
+}
+
 // Loading fallback for lazy-loaded admin pages
 function AdminLoading() {
   return (
@@ -100,10 +116,10 @@ function App() {
     <GoogleOAuthProvider clientId="493910047901-febc082scanlgjm838apfhq93qupj50q.apps.googleusercontent.com">
       <CurrencyProvider>
       <CartProvider>
-        <Toaster position="top-right" theme="dark" closeButton richColors />
+        <ConditionalToaster />
         <ScrollToTop />
         <ConditionalWhatsApp />
-        <FloatingActivityDock />
+        <ConditionalFloatingActivityDock />
         <Routes>
           {/* Customer-facing routes */}
           <Route path="/" element={<HomePage />} />

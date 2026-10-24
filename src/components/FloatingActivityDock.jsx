@@ -24,8 +24,9 @@ export default function FloatingActivityDock() {
     }
   }, [totalCount]);
 
-  // Hide on admin routes or if no items liked/carted
-  if (location.pathname.startsWith("/admin") || totalCount === 0) {
+  // Hide on admin routes, auth routes (/login, /signup), or if no items liked/carted
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
+  if (location.pathname.startsWith("/admin") || isAuthPage || totalCount === 0) {
     return null;
   }
 

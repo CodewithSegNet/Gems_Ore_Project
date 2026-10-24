@@ -23,6 +23,9 @@ const HeartIcon = ({ filled }) => (
 
 // ─── Shared image-side toast renderer ────────────────────────────────────────
 const renderProductToast = ({ image, title, subtitle, accentColor, icon, toastId }) => {
+  if (typeof window !== "undefined" && (window.location.pathname === "/login" || window.location.pathname === "/signup")) {
+    return;
+  }
   const pill = {
     display: "inline-flex",
     alignItems: "center",
