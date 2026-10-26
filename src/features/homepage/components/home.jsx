@@ -1,15 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-const backgroundVideo = "https://res.cloudinary.com/wruetqvx/video/upload/v1792113306/gems_ore/video.mp4";
 import { useGender } from "../../../contexts/genderContext";
 import { useCustomRequest } from "../../../contexts/CustomRequestContext";
+// ── Category icons ─────────────────────────────────────────────────────────
 const watch = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113201/gems_ore/watch.png";
 const ring = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113202/gems_ore/ring.png";
 const necklace = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113203/gems_ore/necklace.png";
 const earringsImg = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113205/gems_ore/earrings.png";
 const bracelet = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113206/gems_ore/bracelet.png";
-const male = "https://res.cloudinary.com/wruetqvx/video/upload/v1792113306/gems_ore/male_video.mp4";
-// Poster/fallback still frames while video loads on iOS
+// ── Video sources ──────────────────────────────────────────────────────────
+// Primary: Cloudinary HLS stream — iOS Safari REQUIRES HLS or range-capable
+// MP4 to autoplay. The plain /upload/ MP4 URL lacks Accept-Ranges on many
+// CDN edges which causes silent failure on iPhone mobile browsers.
+// HLS URL pattern: /video/upload/sp_hd/ + .m3u8 extension
+const backgroundVideoHls = "https://res.cloudinary.com/wruetqvx/video/upload/sp_hd/v1792113306/gems_ore/video.m3u8";
+const backgroundVideoMp4 = "https://res.cloudinary.com/wruetqvx/video/upload/v1792113306/gems_ore/video.mp4";
+const maleHls = "https://res.cloudinary.com/wruetqvx/video/upload/sp_hd/v1792113306/gems_ore/male_video.m3u8";
+const maleMp4 = "https://res.cloudinary.com/wruetqvx/video/upload/v1792113306/gems_ore/male_video.mp4";
+// ── Poster images ──────────────────────────────────────────────────────────
 const womenPoster = "https://res.cloudinary.com/wruetqvx/image/upload/so_0/v1792113306/gems_ore/video.jpg";
 const menPoster = "https://res.cloudinary.com/wruetqvx/image/upload/so_0/v1792113306/gems_ore/male_video.jpg";
 
@@ -127,7 +135,9 @@ const Home = () => {
             onCanPlay={tryPlay}
             onLoadedData={tryPlay}
           >
-            <source src={backgroundVideo} type="video/mp4" />
+            {/* HLS first — iOS Safari native support; mp4 fallback for all others */}
+            <source src={backgroundVideoHls} type="application/x-mpegURL" />
+            <source src={backgroundVideoMp4} type="video/mp4" />
           </video>
         ) : (
           <video
@@ -144,7 +154,9 @@ const Home = () => {
             onCanPlay={tryPlay}
             onLoadedData={tryPlay}
           >
-            <source src={male} type="video/mp4" />
+            {/* HLS first — iOS Safari native support; mp4 fallback for all others */}
+            <source src={maleHls} type="application/x-mpegURL" />
+            <source src={maleMp4} type="video/mp4" />
           </video>
         )}
 
