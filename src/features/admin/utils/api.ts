@@ -14,8 +14,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const url = `${API_BASE}/api/v1${endpoint}`;
 
   const config: RequestInit = {
+    cache: "no-store",
     ...options,
     headers: {
+      "Cache-Control": "no-cache",
+      "Pragma": "no-cache",
       ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,

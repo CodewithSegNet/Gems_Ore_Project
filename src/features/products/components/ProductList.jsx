@@ -34,56 +34,69 @@ const ProductList = () => {
 
 
 
-  // Fetch products and categories from API (with sessionStorage cache)
+  // Fetch products and categories from API (stale-while-revalidate)
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
-      setLoading(true);
-      try {
-        const productCacheKey = `gem_products_${genderFilter}`;
-        const categoryCacheKey = "gem_categories";
+      const productCacheKey = `gem_products_${genderFilter}`;
+      const categoryCacheKey = "gem_categories";
 
-        const cachedProducts  = getCached(productCacheKey);
-        const cachedCategories = getCached(categoryCacheKey);
+      const cachedProducts = getCached(productCacheKey);
+      const cachedCategories = getCached(categoryCacheKey);
 
-        const params = { status: "active" };
-        if (genderFilter !== "all") {
-          params.gender = genderFilter === "men" ? "male" : "female";
-        }
-
-        const [productsData, categoriesData] = await Promise.all([
-          cachedProducts
-            ? Promise.resolve(cachedProducts)
-            : storefrontApi.products.getAll(params).then((data) => {
-                setCache(productCacheKey, data);
-                return data;
-              }),
-          cachedCategories
-            ? Promise.resolve(cachedCategories)
-            : storefrontApi.categories.getAll().then((data) => {
-                setCache(categoryCacheKey, data);
-                return data;
-              }),
-        ]);
-
-        setAllProducts(productsData.map((p) => ({
+      const formatProductsList = (data) =>
+        (data || []).map((p) => ({
           id: p.id,
           name: p.name,
           price: p.price,
-          image: (p.video_position === 0 && p.video_url) ? p.video_url : (p.image || (p.images?.[0]?.image_url) || p.video_url || ""),
+          image:
+            p.video_position === 0 && p.video_url
+              ? p.video_url
+              : p.image || p.images?.[0]?.image_url || p.video_url || "",
           video_url: p.video_url || null,
           rating: 5.0,
           inStock: p.stock > 0,
           category: p.category_name?.toLowerCase() || "",
           category_id: p.category_id,
-          gender: p.gender === "unisex" ? "unisex" : (p.gender === "male" ? "men" : "women"),
-        })));
-        setCategories(categoriesData || []);
+          gender:
+            p.gender === "unisex" ? "unisex" : p.gender === "male" ? "men" : "women",
+        }));
+
+      // Render cached immediately for fast UX if available
+      if (cachedProducts) {
+        setAllProducts(formatProductsList(cachedProducts));
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+      if (cachedCategories) {
+        setCategories(cachedCategories || []);
+      }
+
+      const params = { status: "active" };
+      if (genderFilter !== "all") {
+        params.gender = genderFilter === "men" ? "male" : "female";
+      }
+
+      try {
+        // Always fetch fresh data from API to ensure sync with server
+        const [productsData, categoriesData] = await Promise.all([
+          storefrontApi.products.getAll(params),
+          storefrontApi.categories.getAll(),
+        ]);
+
+        if (isMounted) {
+          setCache(productCacheKey, productsData);
+          setCache(categoryCacheKey, categoriesData);
+          setAllProducts(formatProductsList(productsData));
+          setCategories(categoriesData || []);
+        }
       } catch (e) {
         console.error("Failed to fetch products/categories:", e);
-        setAllProducts([]);
-        setCategories([]);
+        if (!cachedProducts && isMounted) setAllProducts([]);
+        if (!cachedCategories && isMounted) setCategories([]);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchData();

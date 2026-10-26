@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import adminApi from "../utils/api";
 import { ConfirmModal } from "../components/confirm-modal";
 import { StatusModal } from "../components/status-modal";
+import { clearAllProductCache } from "../../homepage/utils/cache";
 
 type GenderTab = "all" | "male" | "female" | "unisex";
 
@@ -114,6 +115,7 @@ export function Products() {
         await adminApi.products.create(payload);
         showStatus("success", "Product created successfully.");
       }
+      clearAllProductCache();
       resetForm();
       fetchProducts();
     } catch (e: any) {
@@ -142,9 +144,12 @@ export function Products() {
 
   const handleDelete = async () => {
     if (!deleteId) return;
+    const idToDelete = deleteId;
     setDeleting(true);
     try {
-      await adminApi.products.delete(deleteId);
+      await adminApi.products.delete(idToDelete);
+      setProducts((prev) => prev.filter((p) => p.id !== idToDelete));
+      clearAllProductCache();
       showStatus("success", "Product deleted successfully.");
       fetchProducts();
     } catch (e: any) {

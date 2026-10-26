@@ -9,6 +9,9 @@ const necklace = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113203/g
 const earringsImg = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113205/gems_ore/earrings.png";
 const bracelet = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113206/gems_ore/bracelet.png";
 const male = "https://res.cloudinary.com/wruetqvx/video/upload/v1792113306/gems_ore/male_video.mp4";
+// Poster/fallback still frames while video loads on iOS
+const womenPoster = "https://res.cloudinary.com/wruetqvx/image/upload/so_0/v1792113306/gems_ore/video.jpg";
+const menPoster = "https://res.cloudinary.com/wruetqvx/image/upload/so_0/v1792113306/gems_ore/male_video.jpg";
 
 const Home = () => {
   const [btnHovered, setBtnHovered] = useState(false);
@@ -28,6 +31,17 @@ const Home = () => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
+  // Attempt to play the video — safe on iOS (muted + playsInline allows autoplay)
+  const tryPlay = () => {
+    if (!videoRef.current) return;
+    const playPromise = videoRef.current.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay was prevented — video will stay paused (poster still shows)
+      });
+    }
+  };
+
   useEffect(() => {
     let isVisible = true;
 
@@ -37,7 +51,7 @@ const Home = () => {
         if (!videoRef.current) return;
         isVisible = entry.isIntersecting;
         if (isVisible && !document.body.classList.contains("modal-open")) {
-          videoRef.current.play().catch(() => {});
+          tryPlay();
         } else {
           videoRef.current.pause();
         }
@@ -56,7 +70,7 @@ const Home = () => {
       if (isOpen) {
         videoRef.current.pause();
       } else if (isVisible) {
-        videoRef.current.play().catch(() => {});
+        tryPlay();
       }
     };
 
@@ -66,6 +80,19 @@ const Home = () => {
       observer.disconnect();
       window.removeEventListener("gems:modal-toggle", handleModalToggle);
     };
+  }, [gender]);
+
+  // When gender changes, the video element is replaced — try to play the new one
+  // Also set x-webkit-airplay as a real DOM attribute (not valid as a JSX prop)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (videoRef.current) {
+        videoRef.current.setAttribute("x-webkit-airplay", "allow");
+        videoRef.current.setAttribute("webkit-playsinline", "");
+        tryPlay();
+      }
+    }, 100);
+    return () => clearTimeout(t);
   }, [gender]);
 
   const handleCategoryClick = (e, categoryLabel) => {
@@ -93,9 +120,12 @@ const Home = () => {
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
+            poster={womenPoster}
             style={{ willChange: "transform", transform: "translateZ(0)" }}
             className="absolute inset-0 w-full h-full object-cover"
+            onCanPlay={tryPlay}
+            onLoadedData={tryPlay}
           >
             <source src={backgroundVideo} type="video/mp4" />
           </video>
@@ -107,9 +137,12 @@ const Home = () => {
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
+            poster={menPoster}
             style={{ willChange: "transform", transform: "translateZ(0)" }}
             className="absolute inset-0 w-full h-full object-cover"
+            onCanPlay={tryPlay}
+            onLoadedData={tryPlay}
           >
             <source src={male} type="video/mp4" />
           </video>

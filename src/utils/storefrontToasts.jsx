@@ -123,7 +123,7 @@ const renderProductToast = ({ image, title, subtitle, accentColor, icon, toastId
             <span>{subtitle}</span>
           </div>
           <p style={titleStyle}>{title}</p>
-          <p style={subtitleStyle}>Gems &amp; Ore</p>
+          <p style={subtitleStyle}>Gems Ore</p>
         </div>
       </div>
     ),

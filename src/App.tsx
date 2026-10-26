@@ -91,11 +91,11 @@ function ConditionalToaster() {
   return <Toaster position="top-right" theme="dark" closeButton richColors />;
 }
 
-// Only render FloatingActivityDock on non-auth pages (hide on /login and /signup)
+// Hide FloatingActivityDock on auth, cart, and checkout pages
 function ConditionalFloatingActivityDock() {
   const location = useLocation();
-  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
-  if (isAuthPage) return null;
+  const hiddenPaths = ["/login", "/signup", "/cart", "/checkout"];
+  if (hiddenPaths.includes(location.pathname)) return null;
   return <FloatingActivityDock />;
 }
 
@@ -113,7 +113,7 @@ function AdminLoading() {
 
 function App() {
   return (
-    <GoogleOAuthProvider clientId="493910047901-febc082scanlgjm838apfhq93qupj50q.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "2743210259-u898dfmtgclmn56ug5jbjbtvidbmfb6s.apps.googleusercontent.com"}>
       <CurrencyProvider>
       <CartProvider>
         <ConditionalToaster />

@@ -114,13 +114,14 @@ const CryptoPayment = () => {
   };
 
   const getWalletAddress = () => {
-    if (method === "BTC") return wallets.btc_wallet_address || "Wallet address not set";
+    // Backend PUBLIC_KEYS: btc_address, usdt_erc20, usdt_bep20, usdt_trc20
+    if (method === "BTC") return wallets.btc_address || "Wallet address not set";
     if (method === "USDT") {
-      if (selectedNetwork === "trc20") return wallets.usdt_trc20_address || wallets.usdt_wallet_address || "TRC20 address not set";
-      if (selectedNetwork === "bep20") return wallets.usdt_bep20_address || wallets.usdt_wallet_address || "BEP20 address not set";
-      return wallets.usdt_erc20_address || wallets.usdt_wallet_address || "ERC20 address not set";
+      if (selectedNetwork === "trc20") return wallets.usdt_trc20 || "TRC20 address not set";
+      if (selectedNetwork === "bep20") return wallets.usdt_bep20 || "BEP20 address not set";
+      return wallets.usdt_erc20 || "ERC20 address not set";
     }
-    return wallets.crypto_wallet_address || "Wallet address not set";
+    return wallets.btc_address || "Wallet address not set";
   };
 
   const getNetworkName = () => {
@@ -164,13 +165,13 @@ const CryptoPayment = () => {
     // Simulate progress animation
     const progressInterval = setInterval(() => {
       setUploadProgress((prev) => {
-        if (prev >= 90) {
+        if (prev >= 85) {
           clearInterval(progressInterval);
-          return 90;
+          return 85;
         }
-        return prev + Math.floor(Math.random() * 15) + 5;
+        return prev + Math.floor(Math.random() * 12) + 5;
       });
-    }, 200);
+    }, 300);
 
     try {
       let finalOrderId = orderId;
@@ -186,7 +187,28 @@ const CryptoPayment = () => {
         clearCart();
       }
 
-      await storefrontApi.orders.uploadPaymentProof(finalOrderId, selectedFile);
+      // Step 1: Upload the image file to get a Cloudinary URL
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+      const uploadRes = await fetch(`${apiBase}/api/v1/upload/image`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errData = await uploadRes.json().catch(() => ({}));
+        throw new Error(errData?.detail || "Failed to upload image. Please try again.");
+      }
+
+      const uploadData = await uploadRes.json();
+      const proofUrl = uploadData?.data?.url || uploadData?.url;
+      if (!proofUrl) throw new Error("Upload succeeded but no URL returned. Please try again.");
+
+      // Step 2: Save the URL on the order
+      await storefrontApi.orders.uploadPaymentProof(finalOrderId, proofUrl);
+
       clearInterval(progressInterval);
       setUploadProgress(100);
       setTimeout(() => {
@@ -250,8 +272,16 @@ const CryptoPayment = () => {
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <span className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-xl">
-                    {method === "BTC" ? "₿" : "₮"}
+                  <span className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center p-2 shrink-0">
+                    <img
+                      src={
+                        method === "BTC"
+                          ? "https://res.cloudinary.com/wruetqvx/image/upload/v1792113269/gems_ore/bitcoin.png"
+                          : "https://res.cloudinary.com/wruetqvx/image/upload/v1792113270/gems_ore/usdt.png"
+                      }
+                      alt={method === "BTC" ? "Bitcoin" : "USDT"}
+                      className="w-full h-full object-contain"
+                    />
                   </span>
                   <div>
                     <h1 className="text-lg font-bold text-[rgba(68,68,68,1)]">

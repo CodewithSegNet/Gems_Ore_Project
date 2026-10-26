@@ -124,31 +124,35 @@ const Checkout = () => {
     setError("");
     try {
       const orderPayload = {
-        name: form.name.trim(),
+        // Backend OrderCreate field names
+        customer_name: form.name.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
-        shipping_address: form.address.trim(),
-        shipping_city: shippingState || "",
+        address: form.address.trim(),
+        city: shippingState || "",
         shipping_state: shippingState || "",
         shipping_country: shippingCountry,
         shipping_cost: shippingCost,
         payment_method: "Paystack",
         payment_reference: reference.reference || reference.trxref,
-        items: cartItems.map((item) => ({
-          product_id: item.id,
+        items_count: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+        items_json: JSON.stringify(cartItems.map((item) => ({
+          id: item.id,
           name: item.name,
           quantity: item.quantity,
           price: item.price,
           image: item.image,
-        })),
+        }))),
         customer_id: user?.id || null,
         subtotal,
-        discount_amount: discount,
-        applied_discount_id: appliedDiscount?.id || null,
+        discount_amount: discount || 0,
+        discount_code: appliedDiscount?.code || null,
         vat_amount: vat,
         vat_percent: vatPercent,
         total: grandTotal,
-        note: form.note.trim() || undefined,
+        notes: form.note.trim() || null,
+        status: "pending",
+        payment_approved: false,
       };
 
       const res = await storefrontApi.orders.create(orderPayload);
@@ -167,30 +171,34 @@ const Checkout = () => {
     setError("");
     try {
       const pendingOrderData = {
-        name: form.name.trim(),
+        // Backend OrderCreate field names
+        customer_name: form.name.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
-        shipping_address: form.address.trim(),
-        shipping_city: shippingState || "",
+        address: form.address.trim(),
+        city: shippingState || "",
         shipping_state: shippingState || "",
         shipping_country: shippingCountry,
         shipping_cost: shippingCost,
         payment_method: paymentMethod,
-        items: cartItems.map((item) => ({
-          product_id: item.id,
+        items_count: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+        items_json: JSON.stringify(cartItems.map((item) => ({
+          id: item.id,
           name: item.name,
           quantity: item.quantity,
           price: item.price,
           image: item.image,
-        })),
+        }))),
         customer_id: user?.id || null,
         subtotal,
-        discount_amount: discount,
-        applied_discount_id: appliedDiscount?.id || null,
+        discount_amount: discount || 0,
+        discount_code: appliedDiscount?.code || null,
         vat_amount: vat,
         vat_percent: vatPercent,
         total: grandTotal,
-        note: form.note.trim() || undefined,
+        notes: form.note.trim() || null,
+        status: "pending",
+        payment_approved: false,
       };
       localStorage.setItem("gemsore_pending_crypto_order", JSON.stringify(pendingOrderData));
       navigate(`/crypto-payment/new?method=${paymentMethod}`);
@@ -332,10 +340,12 @@ const Checkout = () => {
                       <p className="text-xs text-gray-400">Pay securely with Debit/Credit Card, Bank Transfer, or USSD</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-600 rounded">VISA</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-red-50 text-red-600 rounded">MC</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-green-50 text-green-600 rounded">VERVE</span>
+                  <div className="flex items-center shrink-0">
+                    <img
+                      src="https://res.cloudinary.com/wruetqvx/image/upload/v1792113267/gems_ore/pay.png"
+                      alt="Paystack"
+                      className="w-9 h-9 object-contain"
+                    />
                   </div>
                 </label>
 
@@ -348,7 +358,13 @@ const Checkout = () => {
                       <p className="text-xs text-gray-400">Pay directly to our Bitcoin wallet with proof of payment</p>
                     </div>
                   </div>
-                  <span className="text-lg">₿</span>
+                  <div className="flex items-center shrink-0">
+                    <img
+                      src="https://res.cloudinary.com/wruetqvx/image/upload/v1792113269/gems_ore/bitcoin.png"
+                      alt="Bitcoin"
+                      className="w-9 h-9 object-contain"
+                    />
+                  </div>
                 </label>
 
                 {/* Crypto — USDT */}
@@ -360,7 +376,13 @@ const Checkout = () => {
                       <p className="text-xs text-gray-400">TRC20, ERC20 or BEP20 with proof of payment</p>
                     </div>
                   </div>
-                  <span className="text-xs font-bold px-2 py-1 bg-emerald-50 text-emerald-600 rounded-md">₮ USDT</span>
+                  <div className="flex items-center shrink-0">
+                    <img
+                      src="https://res.cloudinary.com/wruetqvx/image/upload/v1792113270/gems_ore/usdt.png"
+                      alt="USDT"
+                      className="w-9 h-9 object-contain"
+                    />
+                  </div>
                 </label>
               </div>
 

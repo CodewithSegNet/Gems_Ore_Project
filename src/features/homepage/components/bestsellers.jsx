@@ -18,45 +18,59 @@ const BestSellers = () => {
 
   // Fetch best seller products from API (with sessionStorage cache)
   useEffect(() => {
+    let isMounted = true;
     const fetchBestSellers = async () => {
-      setLoading(true);
-      try {
-        const cacheKey = `gem_bestsellers_${gender}`;
-        const cached = getCached(cacheKey);
+      const cacheKey = `gem_bestsellers_${gender}`;
+      const cached = getCached(cacheKey);
 
-        let rawData;
-        if (cached) {
-          rawData = cached;
-        } else {
-          rawData = await storefrontApi.products.getAll({
-            is_best_seller: "true",
-            gender: gender === "men" ? "male" : "female",
-            status: "active",
-          });
-          setCache(cacheKey, rawData);
-        }
-
-        setProducts(rawData.map((p) => ({
+      const formatProducts = (data) =>
+        (data || []).map((p) => ({
           id: p.id,
           name: p.name,
           price: p.price,
-          image: (p.video_position === 0 && p.video_url) ? p.video_url : (p.image || (p.images?.[0]?.image_url) || p.video_url || ""),
+          image:
+            p.video_position === 0 && p.video_url
+              ? p.video_url
+              : p.image || p.images?.[0]?.image_url || p.video_url || "",
           video_url: p.video_url || null,
           video_position: p.video_position,
           rating: 5.0,
           inStock: p.stock > 0,
           category: p.category_name?.toLowerCase() || "",
-          gender: p.gender === "unisex" ? gender : (p.gender === "male" ? "men" : "women"),
-        })));
+          gender:
+            p.gender === "unisex" ? gender : p.gender === "male" ? "men" : "women",
+        }));
+
+      if (cached) {
+        setProducts(formatProducts(cached));
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const rawData = await storefrontApi.products.getAll({
+          is_best_seller: "true",
+          gender: gender === "men" ? "male" : "female",
+          status: "active",
+        });
+
+        if (isMounted) {
+          setCache(cacheKey, rawData);
+          setProducts(formatProducts(rawData));
+        }
       } catch (e) {
         console.error("Failed to fetch best sellers:", e);
-        setProducts([]);
+        if (!cached && isMounted) setProducts([]);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchBestSellers();
     setVisibleCount(ITEMS_PER_PAGE);
+    return () => {
+      isMounted = false;
+    };
   }, [gender]);
 
 
