@@ -25,7 +25,15 @@ interface Category {
 
 export function Products() {
   const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>(() => {
+    try {
+      const stored = localStorage.getItem("gem_admin_categories");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeGenderTab, setActiveGenderTab] = useState<GenderTab>("all");
@@ -73,10 +81,18 @@ export function Products() {
 
   const fetchCategories = async () => {
     try {
+      setCategoriesLoading(true);
       const data = await adminApi.categories.getAll();
-      setCategories(Array.isArray(data) ? data : (data?.items || []));
+      const list = Array.isArray(data) ? data : (data?.items || []);
+      setCategories(list);
+      try {
+        localStorage.setItem("gem_admin_categories", JSON.stringify(list));
+      } catch {}
     } catch (e) {
-      setCategories([]);
+      // Keep cached categories if available
+      setCategories((prev) => (prev.length > 0 ? prev : []));
+    } finally {
+      setCategoriesLoading(false);
     }
   };
 
@@ -243,6 +259,13 @@ export function Products() {
     setIsDialogOpen(false);
   };
 
+  const handleOpenAddProduct = () => {
+    setFormData({ name: "", category_id: "", price: "", stock: "", images: [], video: "", status: "active", gender: "female", isBestSeller: false, isNewCollection: false, videoPosition: undefined });
+    setEditingProduct(null);
+    setIsDialogOpen(true);
+    fetchCategories();
+  };
+
   if (loading) {
     return <div className="p-8 flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-slate-200 border-t-slate-800 rounded-full animate-spin" /></div>;
   }
@@ -255,9 +278,12 @@ export function Products() {
           <h1 className="text-3xl font-semibold text-slate-900">Products</h1>
           <p className="text-slate-500 mt-1.5">Manage your jewelry inventory</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (open && categories.length === 0) fetchCategories();
+        }}>
           <DialogTrigger asChild>
-            <Button onClick={() => resetForm()} className="bg-black text-white hover:bg-slate-800"><Plus className="h-4 w-4 mr-2" /> Add Product</Button>
+            <Button onClick={handleOpenAddProduct} className="bg-black text-white hover:bg-slate-800"><Plus className="h-4 w-4 mr-2" /> Add Product</Button>
           </DialogTrigger>
           <DialogContent className="max-w-md border-0 shadow-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -271,10 +297,20 @@ export function Products() {
               </div>
               <div>
                 <Label htmlFor="category">Category</Label>
-                <Select value={formData.category_id} onValueChange={(value) => setFormData({ ...formData, category_id: value })}>
-                  <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select category" /></SelectTrigger>
+                <Select value={formData.category_id || undefined} onValueChange={(value) => setFormData({ ...formData, category_id: value })}>
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue placeholder={categoriesLoading && categories.length === 0 ? "Loading categories..." : "Select category"} />
+                  </SelectTrigger>
                   <SelectContent>
-                    {(Array.isArray(categories) ? categories : []).map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}
+                    {categoriesLoading && categories.length === 0 ? (
+                      <SelectItem value="__loading" disabled>Loading categories...</SelectItem>
+                    ) : categories.length === 0 ? (
+                      <SelectItem value="__none" disabled>No categories available</SelectItem>
+                    ) : (
+                      (Array.isArray(categories) ? categories : []).map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
