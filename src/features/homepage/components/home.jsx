@@ -9,17 +9,16 @@ const necklace = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113203/g
 const earringsImg = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113205/gems_ore/earrings.png";
 const bracelet = "https://res.cloudinary.com/wruetqvx/image/upload/v1792113206/gems_ore/bracelet.png";
 // ── Video sources ──────────────────────────────────────────────────────────
-// Primary: Cloudinary HLS stream — iOS Safari REQUIRES HLS or range-capable
-// MP4 to autoplay. The plain /upload/ MP4 URL lacks Accept-Ranges on many
-// CDN edges which causes silent failure on iPhone mobile browsers.
-// HLS URL pattern: /video/upload/sp_hd/ + .m3u8 extension
-const backgroundVideoHls = "https://res.cloudinary.com/wruetqvx/video/upload/sp_hd/v1792113306/gems_ore/video.m3u8";
-const backgroundVideoMp4 = "https://res.cloudinary.com/wruetqvx/video/upload/v1792113306/gems_ore/video.mp4";
-const maleHls = "https://res.cloudinary.com/wruetqvx/video/upload/sp_hd/v1792113306/gems_ore/male_video.m3u8";
-const maleMp4 = "https://res.cloudinary.com/wruetqvx/video/upload/v1792113306/gems_ore/male_video.mp4";
+// HLS streams: sp_full_hd = full 1080p profile; q_auto:best = highest quality
+// MP4 fallbacks: vc_h264,q_auto:best for maximum quality on non-iOS browsers
+const backgroundVideoHls = "https://res.cloudinary.com/wruetqvx/video/upload/sp_full_hd,q_auto:best/v1792113306/gems_ore/video.m3u8";
+const backgroundVideoMp4 = "https://res.cloudinary.com/wruetqvx/video/upload/vc_h264,q_auto:best/v1792113306/gems_ore/video.mp4";
+const maleHls = "https://res.cloudinary.com/wruetqvx/video/upload/sp_full_hd,q_auto:best/v1792113306/gems_ore/male_video.m3u8";
+const maleMp4 = "https://res.cloudinary.com/wruetqvx/video/upload/vc_h264,q_auto:best/v1792113306/gems_ore/male_video.mp4";
 // ── Poster images ──────────────────────────────────────────────────────────
-const womenPoster = "https://res.cloudinary.com/wruetqvx/image/upload/so_0/v1792113306/gems_ore/video.jpg";
-const menPoster = "https://res.cloudinary.com/wruetqvx/image/upload/so_0/v1792113306/gems_ore/male_video.jpg";
+// so_0 = grab frame at 0s; q_auto:best,f_auto,w_1920 = max quality at full HD
+const womenPoster = "https://res.cloudinary.com/wruetqvx/image/upload/so_0,q_auto:best,f_auto,w_1920/v1792113306/gems_ore/video.jpg";
+const menPoster = "https://res.cloudinary.com/wruetqvx/image/upload/so_0,q_auto:best,f_auto,w_1920/v1792113306/gems_ore/male_video.jpg";
 
 const Home = () => {
   const [btnHovered, setBtnHovered] = useState(false);
