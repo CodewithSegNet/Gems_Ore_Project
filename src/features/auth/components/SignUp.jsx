@@ -151,7 +151,7 @@ const SignUp = () => {
     setError("");
     try {
       await storefrontApi.auth.verifyOtp(email, code);
-      await signup(email, firstName, lastName);
+      await signup({ email, first_name: firstName, last_name: lastName });
       navigate("/");
     } catch (err) {
       setError(err.message || "Failed to create account");

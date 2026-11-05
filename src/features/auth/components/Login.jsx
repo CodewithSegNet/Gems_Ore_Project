@@ -173,7 +173,7 @@ const Login = () => {
   return (
     <div className="relative min-h-screen flex items-center justify-center">
       <img src={mbg} alt="" className="absolute inset-0 w-full h-full object-cover" />
-      <div className="absolute inset-0 bg-black/50"></div>
+      <div className="absolute inset-0 bg-black/50 pointer-events-none"></div>
 
       <button
         onClick={() => navigate("/")}
